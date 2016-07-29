@@ -1,0 +1,19 @@
+# This is where you configure akizuki.
+# Replace wildcards with the relevant information.
+
+# Discord bot token goes here
+token: ___________________________________________________________
+
+# Servers akizuki is allowed to run in.
+# This list can be an arbitrary number of IDs long.
+servers: [##################, ##################]
+
+# This decides where akizuki will post unqueried messages (eg startup messages and reset reminders).
+# This list can be an arbitrary number of channels long and is probably server agnostic?
+# akizuki will still be queried from any channel she has read/write access to (ie not just the ones in this list).
+# This list can be an arbitrary number of IDs long. 
+channels: [##################, ##################, ##################]
+
+# The users allowed to use high-level commands like shutting down the bot.
+# This list can be an arbitrary number of IDs long.
+admins: [##################, ##################, ##################]

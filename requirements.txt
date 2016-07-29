@@ -1,0 +1,5 @@
+discord
+schedule
+pyyaml
+json
+asyncio

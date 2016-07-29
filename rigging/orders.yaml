@@ -1,0 +1,29 @@
+# Command/action pairings for akizuki.
+# Right now let's just stick with text reactions.
+
+# If you want to add more, make sure to follow the format of [key: text]. 
+# You'll probably have to add \\ in front of a ` since discord has to parse a python string parsed from this yaml
+info: I'm being developed by Storian Logi with help from other members of Nasujima Anchorage. I'm Storian's first python project, but I'll do my best!
+repo: https://github.com/StorianLogi/akizuki/
+github: https://github.com/StorianLogi/akizuki/
+source: https://github.com/StorianLogi/akizuki/
+improvements: http://akashi-list.me/
+improve: http://akashi-list.me/
+fit: http://i.imgur.com/Ucn5Njc.png # Credit to Sao-link for table
+# development: http://i.imgur.com/8QqWKWX.png' # Credit to Dusk/Dawn for table, as soon as he lets me use it.
+wikiwiki: http://wikiwiki.jp/kancolle/
+galstars: http://unlockacgweb.galstars.net/Kancollewiki/viewCreateShipLogList
+kancolle-db: http://kancolle-db.net/
+kcdb: http://kancolle-db.net/
+poi-statistics: http://db.kcwiki.moe/drop/
+poi-stats: http://db.kcwiki.moe/drop/
+kc3: https://github.com/KC3Kai/KC3Kai
+kc3kai: https://github.com/KC3Kai/KC3Kai
+kc3改: https://github.com/KC3Kai/KC3Kai # doesn't work. can't imagine why :P
+poi-viewer: https://github.com/poooi/poi
+poooi: https://github.com/poooi/poi
+gakada: https://github.com/gakada/KanColleViewer
+
+# memes
+poi: http://anohito.tw/poi/
+orel: https://www.youtube.com/watch?v=PKQl39epgmo
