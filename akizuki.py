@@ -54,9 +54,9 @@ def update():
     #TODO: get the servercheck working xP
     #TODO: test with multiple servers
     if isinstance(config['servers'],list):
-        servers = [discord.Object(s) for s in config['servers']]
+        servers = [bot.get_server(str(s)) for s in config['servers']]
     else:
-        servers = [discord.Object(config['servers']),]
+        servers = [bot.get_server(str(['servers'])),]
 
     # TODO: test with single channel
     if isinstance(config['channels'],list):
@@ -92,6 +92,16 @@ async def send_to_all_channels(message: str) : # -> List[Message]:
             pass
 
     return messages
+
+async def sendToAllAdmins(message: str) :
+    global admins
+    global servers
+    for admin in admins:
+        for server in servers:
+            try:
+                await bot.send_message(server.get_member(admin), message)
+            except (discord.errors.Forbidden, discord.errors.NotFound) as n:
+                pass
 
 def construct_reminder_func(message):
     return lambda: asyncio.ensure_future(send_to_all_channels(message))
@@ -178,13 +188,9 @@ async def on_ready():
     # Scheduled messages using schedule
     asyncio.ensure_future(scheduledposts())
     # Startup message
-    says = await send_to_all_channels('Akizuki-class first bot Akizuki, reporting in!\nI\'m still undergoing training at the moment, so please bear with me!')
+    await sendToAllAdmins('Akizuki, setting sail!')
 
     initialize_schedule()
-
-    await asyncio.sleep(20)
-    for d in says:
-        await bot.delete_message(d)
 
 
 # for use in channels
@@ -225,6 +231,7 @@ def printCommand(message,command,fixed,terms=''):
 # This works. Bot commands don't. I'll just stick with client fake commands.
 @bot.event
 async def on_message(message):
+
     # akizuki shouldn't talk to herself, listen to things that aren't commands, or servers that aren't whitelisted
     # if (message.author == bot.user or (not message.content.startswith(command_prefix)) or ((message.server not in servers) and (not message.channel.is_private) and (message.author not in admins))) :
     if (message.author == bot.user or (not message.content.startswith(command_prefix))) :
@@ -298,20 +305,6 @@ async def on_message(message):
             formatted_result = '```' + yaml.dump(ship_data[rest], default_flow_style=False) + '```'
             await on_command(message, message.channel, formatted_result, 30)
 
-    # Owner command(s)
-    # proper shutdown command
-    if command in ['shutdown', 'sd']:
-        if message.author.id in admins:
-            try:
-                await bot.delete_message(message)
-            except discord.errors.Forbidden:
-                pass 
-            says = await send_to_all_channels('Returning to base.')
-            await asyncio.sleep(10)
-            for d in says:
-                await bot.delete_message(d)
-            sys.exit()
-
     # use ///" and ///' if you want to use those characters
     if command in ['say']:
         if message.author.id in admins:
@@ -334,5 +327,15 @@ async def on_message(message):
                 await bot.send_message(message.channel, to_say)
                 printCommand(message,command,fixed)
 
+    # Owner command(s)
+    # proper shutdown command
+    if command in ['shutdown', 'sd']:
+        if message.author.id in admins:
+            try:
+                await bot.delete_message(message)
+            except discord.errors.Forbidden:
+                pass 
+            await sendToAllAdmins('Returning to base.')
+            await asyncio.sleep(10)
 
 bot.run(token)
