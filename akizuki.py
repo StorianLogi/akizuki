@@ -4,7 +4,6 @@ import discord # definitely not native
 from discord.ext import commands
 
 import datetime, re
-# import random
 import schedule # not native
 import json # not native iirc
 import time
@@ -15,15 +14,24 @@ import shlex # built-in to 3.5
 import requests
 import urllib.parse # built-in to 3.5
 from typing import List
+import logging
 
 description = '''An open source Kancolle helper bot for Discord.'''
 command_prefix = '+' # change to whatever you see fit
 bot = commands.Bot(command_prefix, description=description)
+# logging.basicConfig(filename='captains.log',format='[%(asctime)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S',level=logging.INFO)
+captainsLog = logging.getLogger()
+pen = logging.FileHandler('captains.log')
+pen.setLevel(logging.INFO)
+pen.setFormatter(logging.Formatter('[%(asctime)s]: %(message)s', '%Y/%m/%d %H:%M:%S'))
+captainsLog.addHandler(pen)
 
 # initalizes token from config.yaml and commandMatrix from orders.yaml.
 config = yaml.load(open('config.yaml','r'))
 global token
 token = config['token']
+global admins
+
 global commandMatrix
 commandMatrix = yaml.load(open('rigging/orders.yaml','r'))
 
@@ -70,7 +78,7 @@ def update():
     else:
         admins = [str(config['admins']),]
 
-    print('commandMatrix, questMatrix, servers, channels, admins updated.')
+    captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
 
 def updateOnCommand(message):
     update()
@@ -145,7 +153,7 @@ ship_data = create_ship_yaml_mapping()
 # Timed messages using schedule. This stuff works but can only do as far as weeklies.
 # Will need to switch to APscheduler for more comprehensive reminders.
 async def scheduledposts():
-    print('scheduledposts() got called.')
+    captainsLog.info('Posts have been scheduled.')
     while not bot.is_closed:
         schedule.run_pending()
         await asyncio.sleep(15) # Change to 30 or 60 if too intensive to run.
@@ -177,20 +185,20 @@ async def on_ready():
     else:
         alreadyRunning = True
 
-    update()
-
-
     print('------')
+    update()    
+    captainsLog.info('Akizuki launched.')
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('      ID: ' + bot.user.id)
-    print('------')
     # Scheduled messages using schedule
     asyncio.ensure_future(scheduledposts())
+    initialize_schedule()
+    print('------')
+
     # Startup message
     await sendToAllAdmins('Akizuki, setting sail!')
 
-    initialize_schedule()
 
 
 # for use in channels
@@ -215,27 +223,39 @@ async def on_command_DM(message,text):
     except discord.errors.Forbidden:
         return
 
-def printCommand(message,command,fixed,terms=''):
+def commandReport(message,command,fixed,terms=''):
     command = command_prefix + command
     if fixed:
         command = command_prefix + command
     if terms: # account for if list and not single string
         command = command + ' ' + terms
     if message.channel.is_private:
-        print('\"' + command + '\"' + ' was called in ' + message.author.name + ' (ID#' + message.author.id + ')\'s DMs.')
-        return
-    print('\"' + command + '\"' + ' was called in ' + message.channel.name + ' (ID#' + message.channel.id + ') in ' + message.server.name + ' (ID#' + message.server.id  + ')')
+        report = command + ' was called in ' + message.author.name + ' <@' + message.author.id + '> DM'
+    else:
+        report = command + ' was called in ' + message.channel.name + ' <#' + message.channel.id + '> in ' + message.server.name + ' (ID#' + message.server.id  + ')'
+    return report
 
 
 
-# This works. Bot commands don't. I'll just stick with client fake commands.
+# discord.py Bot class commands don't work, so Bot is used as an extension of Client.
 @bot.event
 async def on_message(message):
 
-    # akizuki shouldn't talk to herself, listen to things that aren't commands, or servers that aren't whitelisted
-    # if (message.author == bot.user or (not message.content.startswith(command_prefix)) or ((message.server not in servers) and (not message.channel.is_private) and (message.author not in admins))) :
-    if (message.author == bot.user or (not message.content.startswith(command_prefix))) :
+    global servers
+    # akizuki shouldn't talk to herself
+    if message.author == bot.user :
         return
+    # akizuki logs DMs to file and checks if an admin sent it. akizuki will not respond to DMs not by admins.
+    # If an admin sent it, she'll check if it was a command. If it is, it'll go through the process.
+    elif message.channel.is_private :
+        captainsLog.info(message.author.name + ' <@' + message.author.id + '> DM: ' + message.content)
+        global admins
+        if (message.author.id not in admins or (not message.content.startswith(command_prefix))) :
+            return
+    # akizuki shouldn't listen to things that aren't commands or servers that aren't whitelisted
+    elif (message.server not in servers or (not message.content.startswith(command_prefix))) :
+        return
+
 
     if message.content.startswith(command_prefix + command_prefix):
         fixed = True
@@ -254,10 +274,10 @@ async def on_message(message):
     if command in list(commandMatrix.keys()):
         todo = commandMatrix[command]
         if isinstance(todo, str):
-            printCommand(message,command,fixed)
+            captainsLog.info(commandReport(message,command,fixed))
             await on_command(message,message.channel,todo,fixed) # TODO: need to account for commands not intended to last for 60s
         elif callable(todo):
-            printCommand(message,command,fixed)
+            captainsLog.info(commandReport(message,command,fixed))
             todo(message,message.channel,terms,fixed)
         else:
             print('something went wrong with ' + message.content[:(prefix_len-1)] + command)
@@ -313,10 +333,10 @@ async def on_message(message):
                 to_say = ' '.join(shlex.split(message.content[prefix_len:])[2:])
                 try:
                     await bot.send_message(whereToSay, to_say)
-                    printCommand(message,command,fixed)
                 except discord.errors.InvalidArgument:
                     bot.send_message(message.channel, 'That didn\'t work. Did you remember to include a channel ID?')
                     return
+                captainsLog.info(commandReport(message,command,fixed))
             else:
                 try:
                     await bot.delete_message(message)
@@ -325,7 +345,7 @@ async def on_message(message):
                     return
                 to_say = ' '.join(shlex.split(message.content[prefix_len:])[1:])
                 await bot.send_message(message.channel, to_say)
-                printCommand(message,command,fixed)
+                captainsLog.info(commandReport(message,command,fixed))
 
     # Owner command(s)
     # proper shutdown command
@@ -336,6 +356,7 @@ async def on_message(message):
             except discord.errors.Forbidden:
                 pass 
             await sendToAllAdmins('Returning to base.')
-            await asyncio.sleep(10)
+            captainsLog.info('Akizuki returned.')
+            sys.exit()
 
 bot.run(token)

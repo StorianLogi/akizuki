@@ -1,7 +1,7 @@
 # akizuki ignores
 config.yaml
-config.py
 akizuki.jpg
+*.log
 
 # Windows image file caches
 Thumbs.db
