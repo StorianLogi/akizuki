@@ -20,11 +20,17 @@ description = '''An open source Kancolle helper bot for Discord.'''
 command_prefix = '+' # change to whatever you see fit
 bot = commands.Bot(command_prefix, description=description)
 # logging.basicConfig(filename='captains.log',format='[%(asctime)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S',level=logging.INFO)
-captainsLog = logging.getLogger()
+captainsLog = logging.getLogger('logbook')
+captainsLog.setLevel(logging.INFO)
 pen = logging.FileHandler('captains.log')
 pen.setLevel(logging.INFO)
-pen.setFormatter(logging.Formatter('[%(asctime)s]: %(message)s', '%Y/%m/%d %H:%M:%S'))
+sty = logging.Formatter('[%(asctime)s]: %(message)s', '%Y/%m/%d %H:%M:%S')
+pen.setFormatter(sty)
 captainsLog.addHandler(pen)
+voz = logging.StreamHandler(sys.stdout,)
+voz.setLevel(logging.INFO)
+voz.setFormatter(sty)
+captainsLog.addHandler(voz)
 
 # initalizes token from config.yaml and commandMatrix from orders.yaml.
 config = yaml.load(open('config.yaml','r'))
@@ -228,11 +234,17 @@ def commandReport(message,command,fixed,terms=''):
     if fixed:
         command = command_prefix + command
     if terms: # account for if list and not single string
-        command = command + ' ' + terms
+        if isinstance(terms,list):
+            term = terms[0]
+            print(type(term))
+            print(term)
+            for t in terms[1:] :
+                term = term + ' ' + t
+        command = command + ' ' + term # TODO: this isn't working
     if message.channel.is_private:
-        report = command + ' was called in ' + message.author.name + ' <@' + message.author.id + '> DM'
+        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> DM'
     else:
-        report = command + ' was called in ' + message.channel.name + ' <#' + message.channel.id + '> in ' + message.server.name + ' (ID#' + message.server.id  + ')'
+        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> in #' + message.channel.name + ' <#' + message.channel.id + '> + message.server.name + ' + ' (ID#' + message.server.id  + ')'
     return report
 
 
@@ -336,7 +348,7 @@ async def on_message(message):
                 except discord.errors.InvalidArgument:
                     bot.send_message(message.channel, 'That didn\'t work. Did you remember to include a channel ID?')
                     return
-                captainsLog.info(commandReport(message,command,fixed))
+                captainsLog.info(commandReport(message,command,fixed,terms))
             else:
                 try:
                     await bot.delete_message(message)
@@ -345,7 +357,7 @@ async def on_message(message):
                     return
                 to_say = ' '.join(shlex.split(message.content[prefix_len:])[1:])
                 await bot.send_message(message.channel, to_say)
-                captainsLog.info(commandReport(message,command,fixed))
+                captainsLog.info(commandReport(message,command,fixed,terms))
 
     # Owner command(s)
     # proper shutdown command
