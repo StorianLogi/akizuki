@@ -90,6 +90,45 @@ def updateOnCommand(message):
     update()
     asyncio.ensure_future(on_command_DM(message,'commandMatrix, questMatrix, servers, channels, admins updated.'))
 
+# # So we don't have to drop an "await" in front of all these upcoming commands
+# def makeCommandsCallable(command):
+#     return lambda: asyncio.ensure_future(command)
+
+# Commands too complicated to (easily) load in via yaml.
+# The callable on on_message provides (message,message.channel,terms,fixed) which must included in arguments for commands added to the commandMatrix even if they aren't used or else we get a runtime error.
+# There's probably a way to bypass this in python but I don't know it.
+async def searchKCWikia(message,channel,terms,fixed):
+    searchTerm = ' '.join(terms)
+    searchURL = urllib.parse.quote_plus(searchTerm)
+    if not searchTerm:
+        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
+    else:
+            searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
+            if 'items' in searched:
+                await on_command(message,channel, searched['items'][0]['url'],fixed)
+            else:
+                await on_command(message,channel, 'No result found.',False,10)
+commandMatrix.update(dict.fromkeys(['search'],searchKCWikia))
+
+async def callKCWikia(message,channel,terms,fixed):
+    if terms :
+        await searchKCWikia(message,channel,terms,fixed)
+    else :
+        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
+commandMatrix.update(dict.fromkeys(['wiki'],callKCWikia))
+commandMatrix.update(dict.fromkeys(['wikia'],callKCWikia))
+
+async def questQuery(message,channel,terms,fixed): # +quest [questcode] OR +[questcode]
+    if terms[0] in questMatrix.keys():
+        await on_command(message,channel, questMatrix[terms[0]],fixed)
+    else:
+        await on_command(message,channel, 'No such quest found.',False,10)
+commandMatrix.update(dict.fromkeys(['quest'],questQuery))
+
+
+
+
+
 # commands only usable by users with admin-listed ids
 adminMatrix = {}
 adminMatrix.update(dict.fromkeys(['ping'], 'ポン!'))
@@ -233,18 +272,13 @@ def commandReport(message,command,fixed,terms=''):
     command = command_prefix + command
     if fixed:
         command = command_prefix + command
-    if terms: # account for if list and not single string
-        if isinstance(terms,list):
-            term = terms[0]
-            print(type(term))
-            print(term)
-            for t in terms[1:] :
-                term = term + ' ' + t
-        command = command + ' ' + term # TODO: this isn't working
+    if terms:
+        terms = ' '.join(terms)
+        command = command + ' ' + terms
     if message.channel.is_private:
         report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> DM'
     else:
-        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> in #' + message.channel.name + ' <#' + message.channel.id + '> + message.server.name + ' + ' (ID#' + message.server.id  + ')'
+        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> in #' + message.channel.name + ' <#' + message.channel.id + '> of ' + message.server.name + ' (ID#' + message.server.id  + ')'
     return report
 
 
@@ -260,7 +294,10 @@ async def on_message(message):
     # akizuki logs DMs to file and checks if an admin sent it. akizuki will not respond to DMs not by admins.
     # If an admin sent it, she'll check if it was a command. If it is, it'll go through the process.
     elif message.channel.is_private :
-        captainsLog.info(message.author.name + ' <@' + message.author.id + '> DM: ' + message.content)
+        if message.attachments :
+            captainsLog.info(message.author.name + ' <@' + message.author.id + '> DM: ' + message.content + ' [' + message.attachments[0]['filename'] + ']\n' + message.attachments[0]['url'])
+        else :
+            captainsLog.info(message.author.name + ' <@' + message.author.id + '> DM: ' + message.content)
         global admins
         if (message.author.id not in admins or (not message.content.startswith(command_prefix))) :
             return
@@ -290,7 +327,7 @@ async def on_message(message):
             await on_command(message,message.channel,todo,fixed) # TODO: need to account for commands not intended to last for 60s
         elif callable(todo):
             captainsLog.info(commandReport(message,command,fixed))
-            todo(message,message.channel,terms,fixed)
+            asyncio.ensure_future(todo(message,message.channel,terms,fixed)) # note the await. none of these commands will not involve posting something to discord (and therefore requiring an await)
         else:
             print('something went wrong with ' + message.content[:(prefix_len-1)] + command)
         return
@@ -303,24 +340,6 @@ async def on_message(message):
         else:
             print('something went wrong with admin command ' + message.content[:(prefix_len-1)] + command)
         return
-
-    if command in ['wikia', 'wiki']:
-        searchTerm = ' '.join(terms)
-        searchURL = urllib.parse.quote_plus(searchTerm)
-        if not searchTerm:
-            await on_command(message,message.channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-        else:
-                searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
-                if 'items' in searched:
-                    await on_command(message,message.channel, searched['items'][0]['url'],fixed)
-                else:
-                    await on_command(message,message.channel, 'No result found.',False,10)
-  
-    if command in ['quest']:
-        if terms[0] in questMatrix.keys():
-            await on_command(message,message.channel, questMatrix[terms[0]],fixed)
-        else:
-            await on_command(message,message.channel, 'No such quest found.',False,10)
 
     # There must be a better way.
     if command == 'help':
