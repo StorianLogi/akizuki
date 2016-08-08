@@ -8,7 +8,9 @@ repo: https://github.com/StorianLogi/akizuki/
 github: https://github.com/StorianLogi/akizuki/
 source: https://github.com/StorianLogi/akizuki/
 improvements: http://akashi-list.me/
+improvement: http://akashi-list.me/
 improve: http://akashi-list.me/
+akashi: http://akashi-list.me/
 fit: http://i.imgur.com/Ucn5Njc.png # Credit to Sao-link for table
 # development: http://i.imgur.com/8QqWKWX.png' # Credit to Dusk/Dawn for table, as soon as he lets me use it.
 wikiwiki: http://wikiwiki.jp/kancolle/
@@ -19,7 +21,6 @@ poi-statistics: http://db.kcwiki.moe/drop/
 poi-stats: http://db.kcwiki.moe/drop/
 kc3: https://github.com/KC3Kai/KC3Kai
 kc3kai: https://github.com/KC3Kai/KC3Kai
-kc3改: https://github.com/KC3Kai/KC3Kai # doesn't work. can't imagine why :P
 poi-viewer: https://github.com/poooi/poi
 poooi: https://github.com/poooi/poi
 gakada: https://github.com/gakada/KanColleViewer

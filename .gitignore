@@ -1,6 +1,7 @@
 # akizuki ignores
 config.yaml
-akizuki.jpg
+*.jpg
+*.png
 *.log
 
 # Windows image file caches
