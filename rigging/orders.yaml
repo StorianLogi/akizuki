@@ -1,30 +1,102 @@
 # Command/action pairings for akizuki.
 # Right now let's just stick with text reactions.
 
+# Format for orders
+# [order name]:
+#     cl: [trigger words or phrases that will be preceded by the command prefix to call `akizuki`, separated by commas and enclosed by brackets]
+#     do: [what akizuki will do when this command is called. in orders.yaml, this should only be text strings.]
+#     tr: [format for terms to follow the command in helptext. this should generally be left blank.]
+#     of: [helptext explaining what the command does.]
+
 # If you want to add more, make sure to follow the format of [key: text]. 
-# You'll probably have to add \\ in front of a ` since discord has to parse a python string parsed from this yaml
-info: I'm being developed by Storian Logi with help from other members of Nasujima Anchorage. I'm Storian's first python project, but I'll do my best!
-repo: https://github.com/StorianLogi/akizuki/
-github: https://github.com/StorianLogi/akizuki/
-source: https://github.com/StorianLogi/akizuki/
-improvements: http://akashi-list.me/
-improvement: http://akashi-list.me/
-improve: http://akashi-list.me/
-akashi: http://akashi-list.me/
-fit: http://i.imgur.com/Ucn5Njc.png # Credit to Sao-link for table
-# development: http://i.imgur.com/8QqWKWX.png' # Credit to Dusk/Dawn for table, as soon as he lets me use it.
-wikiwiki: http://wikiwiki.jp/kancolle/
-galstars: http://unlockacgweb.galstars.net/Kancollewiki/viewCreateShipLogList
-kancolle-db: http://kancolle-db.net/
-kcdb: http://kancolle-db.net/
-poi-statistics: http://db.kcwiki.moe/drop/
-poi-stats: http://db.kcwiki.moe/drop/
-kc3: https://github.com/KC3Kai/KC3Kai
-kc3kai: https://github.com/KC3Kai/KC3Kai
-poi-viewer: https://github.com/poooi/poi
-poooi: https://github.com/poooi/poi
-gakada: https://github.com/gakada/KanColleViewer
+# Do not follow a key with `, eg "of: `akizuki`" as that doesn't work for some reason.
+# Remember to precede ' and " with \\\ as these strings will have to pass through both python and discord syntax before reaching users.
+
+# Kancolle commands
+improvements:
+    cl: [improvements, improvement, improve, akashi]
+    do: http://akashi-list.me/
+    tr: 
+    of: Returns the url for `akashi-list.me`
+
+wikiwiki:
+    cl: [wikiwiki]
+    do: http://wikiwiki.jp/kancolle/
+    tr: 
+    of: Returns the url for the Japanese Kancolle wikiwiki
+
+galstars:
+    cl: [galstars]
+    do: http://unlockacgweb.galstars.net/Kancollewiki/viewCreateShipLogList
+    tr: 
+    of: Returns the url for the galstars wiki, a database for construction recipe rates.
+
+kancolle-db:
+    cl: [kancolle-db, kcdb]
+    do: http://kancolle-db.net/
+    tr: 
+    of: Returns the url for `kancolle-db`, a database for construction recipe and drop rates.
+
+poi-stats:
+    cl: [poi-stats, poi-statistics]
+    do: http://db.kcwiki.moe/drop/
+    tr: 
+    of: Returns the url for poi-stats, a database for drop rates.
+
+kc3:
+    cl: [kc3, kc3kai]
+    do: https://github.com/KC3Kai/KC3Kai
+    tr: 
+    of: Returns the Github page for KC3 Kai.
+
+poi-viewer:
+    cl: [poi-viewer, poooi]
+    do: https://github.com/poooi/poi
+    tr: 
+    of: Returns the Github page for Poi viewer.
+
+gakada:
+    cl: [gakada]
+    do: https://github.com/gakada/KanColleViewer
+    tr: 
+    of: Returns the Github page for gakada's fork of KanColleViewer.
+
+kcv:
+    cl: [kcv]
+    do: https://github.com/Yuubari/KanColleViewer
+    tr: 
+    of: Returns the Github page for Yuubari's fork of KanColleViewer.
+
 
 # memes
-poi: http://anohito.tw/poi/
-orel: https://www.youtube.com/watch?v=PKQl39epgmo
+poi:
+    cl: [poi]
+    do: https://github.com/Yuubari/KanColleViewer
+    tr: 
+    of: Poi!
+
+orel:
+    cl: [orel]
+    do: https://www.youtube.com/watch?v=PKQl39epgmo
+    tr: 
+    of: Mutsu ni naru~
+
+
+# meta commands
+info:
+    cl: [info]
+    do: This is the Summer 2016 beta run of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
+    tr: 
+    of: Gives basic information on `akizuki`.
+
+repo:
+    cl: [repo, github, source]
+    do: https://github.com/StorianLogi/akizuki/
+    tr: 
+    of: Returns the Github repository for `akizuki`.
+
+credits:
+    cl: [credit, credits]
+    do: Credit to ComoNaD for teaching Logi how to write in Python, the members of Nasujima Anchorage for helping to run and bugtest `akizuki`, and ridomiridoriyo for inspiring this project by creating the first widely implemented Kancolle bot for Discord.
+    tr: 
+    of: Recognizes a few people for their contributions to this `akizuki` beta.

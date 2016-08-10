@@ -32,14 +32,15 @@ voz.setLevel(logging.INFO)
 voz.setFormatter(sty)
 captainsLog.addHandler(voz)
 
-# initalizes token from config.yaml and commandMatrix from orders.yaml.
-config = yaml.load(open('config.yaml','r'))
-global token
-token = config['token']
-global admins
+# # initalizes token from config.yaml and commandMatrix from orders.yaml.
+# config = yaml.load(open('config.yaml','r'))
+# global token
+# token = config['token']
 
 global commandMatrix
-commandMatrix = yaml.load(open('rigging/orders.yaml','r'))
+commandMatrix = {}
+global commandDict
+commandDict = {}
 
 global alreadyRunning
 alreadyRunning = False
@@ -59,18 +60,29 @@ def update():
 
     questMatrix = {}
     for key in questData.keys():
-        questMatrix.update(dict.fromkeys([questData[key]['code'].lower()],'Quest '+questData[key]['code']+': '+questData[key]['desc']))
+        questCode = questData[key]['code']
+        questMatrix.update({questCode.lower():dict([('cl', [questCode.lower()]), ('do', 'Quest '+questCode+': '+questData[key]['desc']), ('tr', None), ('of', 'Returns the translated description for quest '+questCode+' from the kc3kai translations database.')])}) 
     commandMatrix.update(questMatrix)
 
-    helpMatrix = commandMatrix.copy()
-    for k in questMatrix.keys() :
-        del helpMatrix[k]
-    helpText = 'Non-exhaustive list of commands (some take arguments but most don\'t):\n' + command_prefix + (', '+command_prefix).join(helpMatrix.keys()) + '\nUse '+command_prefix+command_prefix+' if you\'d like to make your command and my response sticky.'
-    commandMatrix.update(dict.fromkeys(['help'],helpText))
+    global commandDict # takes command dupes and allows us to find their dict entry in commandMatrix
+    global commandList # abriged to remove dupes
+    commandList = []
+    for k in commandMatrix.keys() :
+        if k not in questMatrix.keys() :
+            if commandMatrix[k]['tr'] :
+                commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
+            else :
+                commandList.append(commandMatrix[k]['cl'][0])
+            for l in commandMatrix[k]['cl'] :
+                commandDict.update({l:k})
+    commandList.sort()
+    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
 
     global servers
     global channels
     global admins
+
+    config = yaml.load(open('config.yaml','r'))
 
     #TODO: test with multiple servers
     if isinstance(config['servers'],list):
@@ -90,7 +102,12 @@ def update():
     else:
         admins = [str(config['admins']),]
 
+    global token
+    token = config['token']
+
     captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
+
+update()
 
 def updateOnCommand(message):
     update()
@@ -117,59 +134,6 @@ async def sendToAllAdmins(message: str) :
                 pass
 
 
-
-
-
-# Commands too complicated to (easily) load in via yaml.
-# The call in on_message provides (message,message.channel,terms,fixed) which must be included in arguments for commands added to the commandMatrix even if they aren't used or else we get a runtime error.
-# There's probably a way to bypass this in python but I don't know it.
-
-# Searches the kc wikia and returns the first result
-async def searchKCWikia(message,channel,terms,fixed):
-    searchTerm = ' '.join(terms)
-    searchURL = urllib.parse.quote_plus(searchTerm)
-    if not searchTerm:
-        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-    else:
-            searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
-            if 'items' in searched:
-                await on_command(message,channel, searched['items'][0]['url'],fixed)
-            else:
-                await on_command(message,channel, 'No result found.',False,10)
-commandMatrix.update(dict.fromkeys(['search'],searchKCWikia))
-
-# If no terms provided in the discord message, returns link to kc wikia main page
-# If terms provided, searches kc wikia and returns first result
-async def callKCWikia(message,channel,terms,fixed):
-    if terms :
-        await searchKCWikia(message,channel,terms,fixed)
-    else :
-        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-commandMatrix.update(dict.fromkeys(['wiki', 'wikia'],callKCWikia))
-
-# Takes quest code and returns description from kc3kai translations
-async def questQuery(message,channel,terms,fixed):
-    if terms[0] in questMatrix.keys():
-        await on_command(message,channel, questMatrix[terms[0]],fixed)
-    else:
-        await on_command(message,channel, 'No such quest found.',False,10)
-commandMatrix.update(dict.fromkeys(['quest'],questQuery))
-
-# Returns url for akizuki's current avatar
-async def getAvatar(message,channel,terms=None,fixed=False) :
-    if bot.user.avatar_url :
-        await on_command(message,channel,bot.user.avatar_url,fixed)
-    else:
-        await on_command(message,channel,bot.user.default_avatar_url,False,10)
-commandMatrix.update(dict.fromkeys(['avatar','icon','dp'],getAvatar))
-
-# Help query with admin commands
-async def helpForAdmins(message,channel,terms=None,fixed=False) :
-    if bot.user.avatar_url :
-        await on_command(message,channel,bot.user.avatar_url,fixed)
-    else:
-        await on_command(message,channel,bot.user.default_avatar_url,False,10)
-commandMatrix.update(dict.fromkeys(['avatar','icon','dp'],getAvatar))
 
 
 
@@ -238,13 +202,84 @@ async def shutdown(message):
     sys.exit()
 adminMatrix.update(dict.fromkeys(['shutdown','sd'], shutdown))
 
-# Help query with admin commands
-async def helpForAdmins(message):
-    await on_command_DM(message, commandMatrix['help'] + '\nAdmin-only commands: +' + ', +'.join(list(adminMatrix.keys())))
-adminMatrix.update(dict.fromkeys(['help'], helpForAdmins))
-
 # Set status
 # todo next
+
+
+
+
+
+# Commands too complicated to (easily) load in via yaml.
+# The call in on_message provides (message,message.channel,terms,fixed) which must be included in arguments for commands added to the commandMatrix even if they aren't used or else we get a runtime error.
+# There's probably a way to bypass this in python but I don't know it.
+
+# +search
+# Searches the kc wikia and returns the first result
+async def searchKCWikia(message,channel,terms,fixed):
+    searchTerm = ' '.join(terms)
+    searchURL = urllib.parse.quote_plus(searchTerm)
+    if not searchTerm:
+        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
+    else:
+            searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
+            if 'items' in searched:
+                await on_command(message,channel, searched['items'][0]['url'],fixed)
+            else:
+                await on_command(message,channel, 'No result found.',False,10)
+commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[search term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
+
+# +wikia
+# If no terms provided in the discord message, returns link to kc wikia main page
+# If terms provided, searches kc wikia and returns first result
+async def callKCWikia(message,channel,terms,fixed):
+    if terms :
+        await searchKCWikia(message,channel,terms,fixed)
+    else :
+        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
+commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[search term(s) (optional)]'), ('of', 'Searches the kc wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
+
+# +quest
+# Takes quest code and returns description from kc3kai translations
+async def questQuery(message,channel,terms,fixed):
+    if terms[0] in questMatrix.keys():
+        await on_command(message,channel, questMatrix[terms[0]],fixed)
+    else:
+        await on_command(message,channel, 'No such quest found.',False,10)
+commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[quest code (from kc wikia)]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
+
+# +avatar
+# Returns url for akizuki's current avatar
+async def getAvatar(message,channel,terms=None,fixed=False) :
+    if bot.user.avatar_url :
+        await on_command(message,channel,bot.user.avatar_url,fixed)
+    else:
+        await on_command(message,channel,bot.user.default_avatar_url,False,10)
+commandMatrix.update({'avatar':dict([('cl', ['avatar','icon','dp']), ('do', getAvatar), ('tr', None), ('of', 'Returns the url for `akizuki`\\\'s current avatar.')])})
+
+# +commands
+# List all commands. If requester is admin, DM them a list of admin commands.
+async def commandQuery(message,channel,terms=None,fixed=False) :
+    global commandList
+    if message.author.id in admins :
+        await on_command_DM(message,'Admin-only commands: `' + command_prefix + ('`, `'+command_prefix).join(list(adminMatrix.keys()))+'`')
+    await on_command(message,channel,commandList,fixed)
+commandMatrix.update({'commands':dict([('cl', ['commands','command']), ('do', commandQuery), ('tr', None), ('of', 'Lists possible `akizuki` commands.')])})
+
+# +help
+# Provides helptext for each `akizuki` command, or general helptext if no command is queried.
+async def helpQuery(message,channel,terms=None,fixed=False):
+    global commandDict
+    if terms :
+        if (terms[0] in commandDict.keys()) :
+            if commandMatrix[commandDict[terms[0]]]['tr'] is not None :
+                await on_command(message,channel,'`'+command_prefix+terms[0]+' '+commandMatrix[commandDict[terms[0]]]['tr']+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
+            else :
+                await on_command(message,channel,'`'+command_prefix+terms[0]+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
+        else :
+            await on_command(message,channel, 'No such command found.',False,10)
+    else :
+        await on_command(message,channel,'Use `'+command_prefix+'commands` for a list of available commands, `'+command_prefix+'help [command]` for details on each specific command, and `'+command_prefix+'repo` to see and contribute to my Github repository. Use `'+command_prefix+command_prefix+'` if you\\\'d like to sticky a response from me.\nFor support, please create an issue on Github or contact Storian Logi.',fixed)
+commandMatrix.update({'help':dict([('cl', ['help']), ('do', helpQuery), ('tr', '[command]'), ('of', 'Provides helptext for each `akizuki` command, or general helptext if no command is queried.')])})
 
 
 
@@ -396,8 +431,8 @@ async def on_message(message):
         else:
             captainsLog.warning('something went wrong with admin command ' + message.content[:(prefix_len-1)] + command)
         return
-    elif command in list(commandMatrix.keys()):
-        todo = commandMatrix[command]
+    elif command in list(commandDict.keys()):
+        todo = commandMatrix[commandDict[command]]['do']
         if isinstance(todo, str):
             captainsLog.info(commandReport(message,command,fixed))
             await on_command(message,message.channel,todo,fixed) # TODO: need to account for commands not intended to last for 60s
@@ -410,6 +445,7 @@ async def on_message(message):
     else :
         return
 
+global token
 bot.run(token)
 
 # # ship data module
