@@ -71,7 +71,7 @@ kcv:
 # memes
 poi:
     cl: [poi]
-    do: https://github.com/Yuubari/KanColleViewer
+    do: http://anohito.tw/poi/
     tr: 
     of: Poi!
 
@@ -85,7 +85,7 @@ orel:
 # meta commands
 info:
     cl: [info]
-    do: This is the Summer 2016 beta run of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
+    do: This is the Summer 2016 beta test of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
     tr: 
     of: Gives basic information on `akizuki`.
 

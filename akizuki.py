@@ -76,7 +76,8 @@ def update():
             for l in commandMatrix[k]['cl'] :
                 commandDict.update({l:k})
     commandList.sort()
-    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
+    # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
+    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
 
     global servers
     global channels
@@ -88,7 +89,7 @@ def update():
     if isinstance(config['servers'],list):
         servers = [bot.get_server(str(s)) for s in config['servers']]
     else:
-        servers = [bot.get_server(str(['servers'])),]
+        servers = [bot.get_server(str(config['servers'])),]
 
     # TODO: test with single channel
     if isinstance(config['channels'],list):
@@ -123,15 +124,23 @@ async def send_to_all_channels(message: str) :
             pass
     return messages
 
+# note that this only works if the admin and the bot are in at least one shared server
 async def sendToAllAdmins(message: str) :
     global admins
     global servers
+    captainsLog.info(message)
     for admin in admins:
+        messaged = False
         for server in servers:
             try:
                 await bot.send_message(server.get_member(admin), message)
+                messaged = True
             except (discord.errors.Forbidden, discord.errors.NotFound) as n:
                 pass
+            if messaged :
+                break
+        if not messaged :
+            print('Was not able to find and message admin <@' + admin + '>')
 
 
 
@@ -143,6 +152,7 @@ adminMatrix = {}
 adminMatrix.update(dict.fromkeys(['ping'], 'ポン!'))
 adminMatrix.update(dict.fromkeys(['update'], updateOnCommand))
 
+# +avatar
 # note that, unlike commandMatrix callables, on_message only provides the original message to the admin command
 async def avatarChange(message) :
     if not message.attachments :
@@ -151,13 +161,83 @@ async def avatarChange(message) :
         avatar = requests.get(message.attachments[0]['url'])
         try :
             await bot.edit_profile(avatar=avatar.content)
-            say = 'Avatar has been changed to\n' + message.attachments[0]['url']
-            await sendToAllAdmins(say)
-            captainsLog.info(say)
+            await sendToAllAdmins('Avatar has been changed to\n' + message.attachments[0]['url'])
         except discord.errors.InvalidArgument :
             await on_command_DM(message,'That\'s the wrong filetype!')
 adminMatrix.update(dict.fromkeys(['avatar'], avatarChange))
 
+# +idle
+# Sets discord status to idle.
+async def idleOn(message) :
+    await bot.change_status(idle=True)
+    try:
+        await bot.delete_message(message)
+    except discord.errors.Forbidden:
+        pass
+    await sendToAllAdmins('`akizuki` has been set to idle.')
+adminMatrix.update(dict.fromkeys(['idle','inactive', 'idleon'], idleOn))
+
+# +unidle
+# Sets discord status to active.
+async def idleOff(message) :
+    await bot.change_status(idle=False)
+    try:
+        await bot.delete_message(message)
+    except discord.errors.Forbidden:
+        pass
+    await sendToAllAdmins('`akizuki` has been set to active.')
+adminMatrix.update(dict.fromkeys(['unidle','active', 'idleoff'], idleOff))
+
+# +playing [what's being played]
+# Sets playing/description in discord status.
+async def playing(message) :
+    # duplicates functionality already executed in on_message D:
+    # this could be avoided if i either left this command in on_message
+    # alternatively i could just break this prefix check out as its own python command
+    if message.content.startswith(command_prefix + command_prefix):
+        prefix_len = len(command_prefix) * 2
+    else:
+        prefix_len = len(command_prefix)
+    terms = shlex.split(message.content[prefix_len:])[1:]
+    
+    if terms :
+        status = discord.Game(name=' '.join(terms))
+        await bot.change_status(game=status)
+        try:
+            await bot.delete_message(message)
+        except discord.errors.Forbidden:
+            pass
+        await sendToAllAdmins('`akizuki` is now playing `' + status.name + '`')
+    else :
+        await idleOff(message)
+adminMatrix.update(dict.fromkeys(['playing', 'status'], playing))
+
+# +streaming [twitch url] [what's being played]
+# Sets playing/description in discord status.
+async def streaming(message) :
+    # duplicates functionality already executed in on_message D:
+    # this could be avoided if i either left this command in on_message
+    # alternatively i could just break this prefix check out as its own python command
+    if message.content.startswith(command_prefix + command_prefix):
+        prefix_len = len(command_prefix) * 2
+    else:
+        prefix_len = len(command_prefix)
+    terms = shlex.split(message.content[prefix_len:])[1:]
+    
+    if terms :
+        status = discord.Game(name=' '.join(terms[1:]),url=terms[0],type=1) #check +playing after this is run
+        await bot.change_status(game=status)
+        try:
+            await bot.delete_message(message)
+        except discord.errors.Forbidden:
+            pass
+        await sendToAllAdmins('`akizuki` is now streaming `' + status.name + '` at ' + status.url)
+        # TODO: this command is incomplete. Should account for all errors. Not fixing now because errors are easily addressed within discord.
+    else :
+        await idleOff(message)
+adminMatrix.update(dict.fromkeys(['streaming'], streaming))
+
+# +say [string] OR +say [channel] [string]
 # Make akizuki say something in either a specific channel or everywhere
 # use ///" and ///' if you want to use those characters
 async def sayThis(message) :
@@ -169,6 +249,7 @@ async def sayThis(message) :
     else:
         prefix_len = len(command_prefix)
     terms = shlex.split(message.content[prefix_len:])[1:] 
+    
     if (terms[0] == command_prefix + command_prefix + 'all') and message.channel.is_private :
         to_say = ' '.join(terms[1:])
         await send_to_all_channels(to_say)
@@ -226,7 +307,7 @@ async def searchKCWikia(message,channel,terms,fixed):
                 await on_command(message,channel, searched['items'][0]['url'],fixed)
             else:
                 await on_command(message,channel, 'No result found.',False,10)
-commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[search term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
+commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
 
 # +wikia
 # If no terms provided in the discord message, returns link to kc wikia main page
@@ -236,7 +317,7 @@ async def callKCWikia(message,channel,terms,fixed):
         await searchKCWikia(message,channel,terms,fixed)
     else :
         await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[search term(s) (optional)]'), ('of', 'Searches the kc wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
+commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
 
 # +quest
 # Takes quest code and returns description from kc3kai translations
@@ -245,7 +326,7 @@ async def questQuery(message,channel,terms,fixed):
         await on_command(message,channel, questMatrix[terms[0]],fixed)
     else:
         await on_command(message,channel, 'No such quest found.',False,10)
-commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[quest code (from kc wikia)]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
+commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
 
 # +avatar
 # Returns url for akizuki's current avatar
@@ -254,16 +335,17 @@ async def getAvatar(message,channel,terms=None,fixed=False) :
         await on_command(message,channel,bot.user.avatar_url,fixed)
     else:
         await on_command(message,channel,bot.user.default_avatar_url,False,10)
-commandMatrix.update({'avatar':dict([('cl', ['avatar','icon','dp']), ('do', getAvatar), ('tr', None), ('of', 'Returns the url for `akizuki`\\\'s current avatar.')])})
+commandMatrix.update({'avatar':dict([('cl', ['avatar','icon','dp']), ('do', getAvatar), ('tr', None), ('of', 'Returns the url for `akizuki`\'s current avatar.')])})
 
 # +commands
 # List all commands. If requester is admin, DM them a list of admin commands.
-async def commandQuery(message,channel,terms=None,fixed=False) :
+async def commandsQuery(message,channel,terms=None,fixed=False) :
     global commandList
     if message.author.id in admins :
-        await on_command_DM(message,'Admin-only commands: `' + command_prefix + ('`, `'+command_prefix).join(list(adminMatrix.keys()))+'`')
+        # await on_command_DM(message,'Admin-only commands: `' + command_prefix + ('`, `'+command_prefix).join(list(adminMatrix.keys()))+'`')
+        await on_command_DM(message,'Admin-only commands: ```' + command_prefix + (', '+command_prefix).join(list(adminMatrix.keys()))+'```')
     await on_command(message,channel,commandList,fixed)
-commandMatrix.update({'commands':dict([('cl', ['commands','command']), ('do', commandQuery), ('tr', None), ('of', 'Lists possible `akizuki` commands.')])})
+commandMatrix.update({'commands':dict([('cl', ['commands','command']), ('do', commandsQuery), ('tr', None), ('of', 'Lists possible `akizuki` commands.')])})
 
 # +help
 # Provides helptext for each `akizuki` command, or general helptext if no command is queried.
@@ -278,7 +360,7 @@ async def helpQuery(message,channel,terms=None,fixed=False):
         else :
             await on_command(message,channel, 'No such command found.',False,10)
     else :
-        await on_command(message,channel,'Use `'+command_prefix+'commands` for a list of available commands, `'+command_prefix+'help [command]` for details on each specific command, and `'+command_prefix+'repo` to see and contribute to my Github repository. Use `'+command_prefix+command_prefix+'` if you\\\'d like to sticky a response from me.\nFor support, please create an issue on Github or contact Storian Logi.',fixed)
+        await on_command(message,channel,'Use `'+command_prefix+'commands` for a list of available commands, `'+command_prefix+'help [command]` for details on each specific command, and `'+command_prefix+'repo` to see and contribute to my Github repository. Use `'+command_prefix+command_prefix+'` if you\'d like to sticky a response from me.\nFor support, please create an issue on Github or contact Storian Logi.',fixed)
 commandMatrix.update({'help':dict([('cl', ['help']), ('do', helpQuery), ('tr', '[command]'), ('of', 'Provides helptext for each `akizuki` command, or general helptext if no command is queried.')])})
 
 
@@ -293,7 +375,7 @@ pvp_reset_early = construct_reminder_func('PVP reset in 1 hour.\n(Ranking point 
 pvp_reset = construct_reminder_func('PVP reset')
 quest_reset_early = construct_reminder_func('Quest reset in 1 hour.')
 quest_reset = construct_reminder_func('Quest reset.')
-weekly_reset_early = construct_reminder_func('It\\\'s a weekly reset, too!')
+weekly_reset_early = construct_reminder_func('It\'s a weekly reset, too!')
 weekly_reset = construct_reminder_func('Weekly reset.')
 
 async def scheduledposts():
@@ -330,18 +412,17 @@ async def on_ready():
         alreadyRunning = True
 
     print('------')
-    update()    
-    captainsLog.info('Akizuki launched.')
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('      ID: ' + bot.user.id)
+    print('------')
+    update()
     # Scheduled messages using schedule
     asyncio.ensure_future(scheduledposts())
     initialize_schedule()
-    print('------')
 
     # Startup message
-    await sendToAllAdmins('Akizuki, setting sail!')
+    await sendToAllAdmins('`akizuki`, setting sail!')
 
 
 
