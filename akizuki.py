@@ -50,7 +50,6 @@ alreadyRunning = False
 # this can be solved by moving the callable commands into update(), but do i want to do that?
 def update():
     global commandMatrix
-    global questMatrix
     # assemble all commands akizuki will respond to on message into this matrix 
     # will receive message, fixed, and terms
     # parse so if isinstance(commandMatrix['command'], str) do on_command(message,message.channel,str,fixed)
@@ -58,6 +57,19 @@ def update():
     commandMatrix.update(yaml.load(open('rigging/orders.yaml','r')))
     questData = requests.get('https://raw.githubusercontent.com/KC3Kai/kc3-translations/master/data/en/quests.json').json()
 
+    global mapMatrix
+    global mapList
+    mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
+    mapList = list(mapMatrix.keys()).sort()
+    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapMatrix.keys())+'```'
+    for key in mapMatrix.keys():
+        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+':\n'+mapMatrix[key]['rte']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information and link to map image for '+key+'.')])}
+        print(thing)
+        commandMatrix.update(thing)
+        print(commandMatrix)
+        #NEEDS SEVERE DEBUGGING
+
+    global questMatrix
     questMatrix = {}
     for key in questData.keys():
         questCode = questData[key]['code']
@@ -68,7 +80,7 @@ def update():
     global commandList # abriged to remove dupes
     commandList = []
     for k in commandMatrix.keys() :
-        if k not in questMatrix.keys() :
+        if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
             if commandMatrix[k]['tr'] :
                 commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
             else :
@@ -78,6 +90,9 @@ def update():
     commandList.sort()
     # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
     commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
+
+
+
 
     global servers
     global channels
@@ -328,6 +343,28 @@ async def questQuery(message,channel,terms,fixed):
         await on_command(message,channel, 'No such quest found.',False,10)
 commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
 
+# +map
+# Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.
+async def mapQuery(message,channel,terms,fixed):
+    global mapMatrix
+    if terms and terms[0] in mapMatrix.keys():
+        await on_command(message,channel, mapMatrix[terms[0]]['map'],fixed)
+    else:
+        global mapList
+        await on_command(message,channel, mapList,fixed)
+commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.')])})
+
+# +routing
+# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+async def routingQuery(message,channel,terms,fixed):
+    global mapMatrix
+    if terms and terms[0] in mapMatrix.keys():
+        await on_command(message,channel, mapMatrix[terms[0]]['rte'],fixed)
+    else:
+        global mapList
+        await on_command(message,channel, mapList,fixed)
+commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.')])})
+
 # +avatar
 # Returns url for akizuki's current avatar
 async def getAvatar(message,channel,terms=None,fixed=False) :
@@ -501,7 +538,7 @@ async def on_message(message):
 
     # any function that responds to a message will take the triggering message "message", whether or not to not delete the triggering message and its reponse "fixed", and any additional terms that refine the general command "terms"
     # if an admin command and a regular command have the same trigger (e.g. _avatar), the admin command takes priority
-    if (command in list(adminMatrix.keys())) and (message.author.id in admins):
+    if (command in list(adminMatrix.keys())) and (message.author.id in admins) and message.channel.is_private:
         todo = adminMatrix[command]
         if isinstance(todo, str):
             captainsLog.info(commandReport(message,command,fixed))
