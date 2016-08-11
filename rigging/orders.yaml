@@ -10,7 +10,7 @@
 
 # If you want to add more, make sure to follow the format of [key: text]. 
 # Do not follow a key with `, eg "of: `akizuki`" as that doesn't work for some reason.
-# Remember to precede ' and " with \\\ as these strings will have to pass through both python and discord syntax before reaching users.
+# Remember to precede ' and " with \ as these strings will have to pass through python/yaml syntax before reaching users.
 
 # Kancolle commands
 improvements:
@@ -66,6 +66,13 @@ kcv:
     do: https://github.com/Yuubari/KanColleViewer
     tr: 
     of: Returns the Github page for Yuubari's fork of KanColleViewer.
+
+twitch:
+    cl: [twitch, streams]
+    do: https://www.twitch.tv/directory/game/Kantai%20Collection
+    tr: 
+    of: Returns the url for the Kantai Collection page on Twitch.
+
 
 
 # memes

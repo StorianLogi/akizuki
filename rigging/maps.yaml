@@ -1,0 +1,15 @@
+# Map info for akizuki
+
+# [map name in format X-#]:
+#     map: [imgur/wikia link to map]
+#     rte: [info/routing information]
+
+# Consider adding AS values/descriptions
+
+1-1:
+    map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
+    rte: Basically anything works. Random routing. Good for sparkling the flagship.
+
+1-2:
+    map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
+    rte: Basically anything works. Random routing.
