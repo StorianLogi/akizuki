@@ -1,11 +1,11 @@
 
 
-import discord # requires install
+import discord # requires install (discord.py)
 from discord.ext import commands
 
 import datetime, re
-import schedule # requires install
-import json # requires install
+# import schedule # requires install
+import json
 import time
 import yaml # requires install (pyyaml)
 import asyncio  # requires install

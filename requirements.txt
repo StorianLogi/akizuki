@@ -1,5 +1,5 @@
-discord
 schedule
+APscheduler
+discord.py
 pyyaml
-json
 asyncio
