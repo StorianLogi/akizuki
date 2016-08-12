@@ -19,7 +19,6 @@ import logging
 description = '''An open source Kancolle helper bot for Discord.'''
 command_prefix = '+' # change to whatever you see fit
 bot = commands.Bot(command_prefix, description=description)
-# logging.basicConfig(filename='captains.log',format='[%(asctime)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S',level=logging.INFO)
 captainsLog = logging.getLogger('logbook')
 captainsLog.setLevel(logging.INFO)
 pen = logging.FileHandler('captains.log')
@@ -31,11 +30,6 @@ voz = logging.StreamHandler(sys.stdout,)
 voz.setLevel(logging.INFO)
 voz.setFormatter(sty)
 captainsLog.addHandler(voz)
-
-# # initalizes token from config.yaml and commandMatrix from orders.yaml.
-# config = yaml.load(open('config.yaml','r'))
-# global token
-# token = config['token']
 
 global commandMatrix
 commandMatrix = {}

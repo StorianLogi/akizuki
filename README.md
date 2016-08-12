@@ -33,5 +33,5 @@ currently implemented
 ### intended
 if i/we can ever figure out how to implement these functions, we will. in descending priority/ascending difficulty of implementation:
 - reminders at weekly/monthly quest, EO, and ranking resets
-- replying to ship stat queries
 - posts devtweets to discord
+- replying to ship stat queries
