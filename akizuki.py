@@ -63,7 +63,7 @@ def update():
     mapList = list(mapMatrix.keys()).sort()
     mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapMatrix.keys())+'```'
     for key in mapMatrix.keys():
-        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+':\n'+mapMatrix[key]['rte']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information and link to map image for '+key+'.')])}
+        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+':'+mapMatrix[key]['rte']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information and link to map image for '+key+'.')])}
         print(thing)
         commandMatrix.update(thing)
         print(commandMatrix)
@@ -85,11 +85,11 @@ def update():
                 commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
             else :
                 commandList.append(commandMatrix[k]['cl'][0])
-            for l in commandMatrix[k]['cl'] :
-                commandDict.update({l:k})
+        for l in commandMatrix[k]['cl'] :
+            commandDict.update({l:k})
     commandList.sort()
     # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
-    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
+    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command]`.'
 
 
 
@@ -482,7 +482,7 @@ async def on_command_DM(message,text):
     await bot.send_message(message.author,text)
     try:
         await bot.delete_message(message)
-    except discord.errors.Forbidden:
+    except (discord.errors.Forbidden, discord.errors.NotFound):
         return
 
 # compiles report to be logged/printed
