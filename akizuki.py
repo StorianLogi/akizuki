@@ -19,7 +19,10 @@ import logging
 description = '''An open source Kancolle helper bot for Discord.'''
 command_prefix = '+' # change to whatever you see fit
 bot = commands.Bot(command_prefix, description=description)
-# logging.basicConfig(filename='captains.log',format='[%(asctime)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S',level=logging.INFO)
+
+global alreadyRunning
+alreadyRunning = False
+
 captainsLog = logging.getLogger('logbook')
 captainsLog.setLevel(logging.INFO)
 pen = logging.FileHandler('captains.log')
@@ -32,102 +35,22 @@ voz.setLevel(logging.INFO)
 voz.setFormatter(sty)
 captainsLog.addHandler(voz)
 
-# # initalizes token from config.yaml and commandMatrix from orders.yaml.
-# config = yaml.load(open('config.yaml','r'))
-# global token
-# token = config['token']
-
-global commandMatrix
-commandMatrix = {}
-global commandDict
-commandDict = {}
-
-global alreadyRunning
-alreadyRunning = False
-
-# make sure all orders and config data are up-to-date
-# note that update() only adds commands not yet included, so if you remove a command from orders.yaml it'll remain in the akizuki session until restart
-# this can be solved by moving the callable commands into update(), but do i want to do that?
-def update():
-    global commandMatrix
-    # assemble all commands akizuki will respond to on message into this matrix 
-    # will receive message, fixed, and terms
-    # parse so if isinstance(commandMatrix['command'], str) do on_command(message,message.channel,str,fixed)
-    # else run the function with the given message, fixed, terms
-    commandMatrix.update(yaml.load(open('rigging/orders.yaml','r')))
-    questData = requests.get('https://raw.githubusercontent.com/KC3Kai/kc3-translations/master/data/en/quests.json').json()
-
-    global mapMatrix
-    global mapList
-    mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
-    mapList = list(mapMatrix.keys())
-    mapList.sort()
-    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapList)+'```'
-    for key in mapMatrix.keys():
-        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
-        commandMatrix.update(thing)
-
-    global questMatrix
-    questMatrix = {}
-    for key in questData.keys():
-        questCode = questData[key]['code']
-        questMatrix.update({questCode.lower():dict([('cl', [questCode.lower()]), ('do', 'Quest '+questCode+': '+questData[key]['desc']), ('tr', None), ('of', 'Returns the translated description for quest '+questCode+' from the kc3kai translations database.')])}) 
-    commandMatrix.update(questMatrix)
-
-    global commandDict # takes command dupes and allows us to find their dict entry in commandMatrix
-    global commandList # abriged to remove dupes
-    commandList = []
-    for k in commandMatrix.keys() :
-        if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
-            if commandMatrix[k]['tr'] :
-                commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
-            else :
-                commandList.append(commandMatrix[k]['cl'][0])
-        for l in commandMatrix[k]['cl'] :
-            commandDict.update({l:k})
-    commandList.sort()
-    # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.' # discord code markup each individual command 
-    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command]`.' # discord block code markup
-
-    global wikiMatrix # kc wiki and wikia bypass keywords
-    wikiMatrix = yaml.load(open('rigging/wikiKeys.yaml','r'))
-
-
-
-
-    global servers
-    global channels
-    global admins
-
-    config = yaml.load(open('config.yaml','r'))
-
-    if isinstance(config['servers'],list):
-        servers = [bot.get_server(str(s)) for s in config['servers']]
+# compiles report to be logged/printed
+def commandReport(message,command,fixed,terms=''):
+    command = command_prefix + command
+    if fixed:
+        command = command_prefix + command
+    if terms:
+        terms = ' '.join(terms)
+        command = command + ' ' + terms
+    if message.channel.is_private:
+        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> DM'
     else:
-        servers = [bot.get_server(str(config['servers'])),]
+        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> in #' + message.channel.name + ' <#' + message.channel.id + '> of ' + message.server.name + ' (ID#' + message.server.id  + ')'
+    return report
 
-    # TODO: test with single channel
-    if isinstance(config['channels'],list):
-        channels = [discord.Object(c) for c in config['channels']]
-    else:
-        channels = [discord.Object(config['channels']),]
 
-    # TODO: test with multiple admins
-    if isinstance(config['admins'],list):
-        admins = [str(a) for a in config['admins']]
-    else:
-        admins = [str(config['admins']),]
 
-    global token
-    token = config['token']
-
-    captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
-
-update()
-
-def updateOnCommand(message):
-    update()
-    asyncio.ensure_future(on_command_DM(message,'commandMatrix, questMatrix, servers, channels, admins updated.'))
 
 async def send_to_all_channels(message: str) :
     global channels
@@ -159,12 +82,248 @@ async def sendToAllAdmins(message: str) :
 
 
 
+# for use in channels
+async def on_command(message,channel,text,fixed=False,time=60):
+    try:
+        d = await bot.send_message(channel,text)
+    except discord.errors.Forbidden:
+        pass    
+    if not fixed:
+        await asyncio.sleep(time)
+        await bot.delete_message(d)
+        try:
+            await bot.delete_message(message)
+        except (discord.errors.Forbidden, discord.errors.NotFound):
+            return
+
+# for use in in-channel commands returning a DM (eg +help)
+async def on_command_DM(message,text):
+    await bot.send_message(message.author,text)
+    try:
+        await bot.delete_message(message)
+    except (discord.errors.Forbidden, discord.errors.NotFound):
+        return
+
+
+
+
+# make sure all orders and config data are up-to-date
+# note that update() only adds commands not yet included, so if you remove a command from orders.yaml it'll remain in the akizuki session until restart
+# this can be solved by moving the callable commands into update(), but do i want to do that?
+def update():
+    global commandMatrix
+    commandMatrix = {}
+    # assemble all commands akizuki will respond to on message into this matrix 
+    # will receive message, fixed, and terms
+    # parse so if isinstance(commandMatrix['command'], str) do on_command(message,message.channel,str,fixed)
+    # else run the function with the given message, fixed, terms
+    commandMatrix.update(yaml.load(open('rigging/orders.yaml','r')))
+    questData = requests.get('https://raw.githubusercontent.com/KC3Kai/kc3-translations/master/data/en/quests.json').json()
+
+    global mapMatrix
+    global mapList
+    mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
+    mapList = list(mapMatrix.keys())
+    mapList.sort()
+    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapList)+'```'
+    for key in mapMatrix.keys():
+        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
+        commandMatrix.update(thing)
+
+    global questMatrix
+    questMatrix = {}
+    for key in questData.keys():
+        questCode = questData[key]['code']
+        questMatrix.update({questCode.lower():dict([('cl', [questCode.lower()]), ('do', 'Quest '+questCode+': '+questData[key]['desc']), ('tr', None), ('of', 'Returns the translated description for quest '+questCode+' from the kc3kai translations database.')])}) 
+    commandMatrix.update(questMatrix)
+
+    global commandDict # takes command dupes and allows us to find their dict entry in commandMatrix
+    commandDict = {}
+    global commandList # abriged to remove dupes
+    commandList = []
+    for k in commandMatrix.keys() :
+        if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
+            if commandMatrix[k]['tr'] :
+                commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
+            else :
+                commandList.append(commandMatrix[k]['cl'][0])
+        for l in commandMatrix[k]['cl'] :
+            commandDict.update({l:k})
+    commandList.sort()
+    # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.' # discord code markup each individual command 
+    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command]`.' # discord block code markup
+
+    global wikiMatrix # kc wiki and wikia bypass keywords
+    wikiMatrix = yaml.load(open('rigging/wikiKeys.yaml','r'))
+
+
+
+
+        # Commands too complicated to (easily) load in via yaml.
+    # The call in on_message provides (message,message.channel,terms,fixed) which must be included in arguments for commands added to the commandMatrix even if they aren't used or else we get a runtime error.
+    # There's probably a way to bypass this in python but I don't know it.
+
+    # +search
+    # Searches the kc wikia and returns the first result
+    async def searchKCWikia(message,channel,terms,fixed):
+        if terms:
+            searchTerm = ' '.join(terms)
+            searchURL = urllib.parse.quote_plus(searchTerm)
+            searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
+            if 'items' in searched:
+                await on_command(message,channel, searched['items'][0]['url'],fixed)
+            else:
+                await on_command(message,channel, 'No result found.',False,10)
+    commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
+
+    # +wikia
+    # If no terms provided in the discord message, returns link to kc wikia main page
+    # If terms provided, returns a key kc wikia url or searches the wikia and returns the first result
+    async def callKCWikia(message,channel,terms,fixed):
+        global wikiMatrix
+        searched = ' '.join(terms)
+        if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wka'] :
+            await on_command(message,channel, wikiMatrix[searched]['wka'],fixed)
+        elif terms :
+            await searchKCWikia(message,channel,terms,fixed)
+        else :
+            await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
+    commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[term(s)]'), ('of', 'Returns a key kc wikia url or searches the wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
+
+    # +wikiwiki
+    # If no terms provided in the discord message, returns link to kc wikiwiki main page
+    # If terms provided, returns a key kc wikiwiki url or assumes no terms and returns link to kc wikiwiki main page
+    async def callKCWikiWiki(message,channel,terms,fixed):
+        global wikiMatrix
+        searched = ' '.join(terms)
+        if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wkw'] :
+            await on_command(message,channel, wikiMatrix[searched]['wkw'],fixed)
+        else :
+            await on_command(message,channel, 'http://wikiwiki.jp/kancolle/',fixed)
+    commandMatrix.update({'wikiwiki':dict([('cl', ['wikiwiki']), ('do', callKCWikiWiki), ('tr', '[term(s)]'), ('of', 'Returns a key wikiwiki url. If no terms or non-key term, returns the url for the Japanese Kancolle wikiwiki.')])})
+
+    # +quest
+    # Takes quest code and returns description from kc3kai translations
+    async def questQuery(message,channel,terms,fixed):
+        if terms[0] in questMatrix.keys():
+            await on_command(message,channel, questMatrix[terms[0]],fixed)
+        else:
+            await on_command(message,channel, 'No such quest found.',False,10)
+    commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
+
+    # +map
+    # Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.
+    async def mapQuery(message,channel,terms,fixed):
+        global mapMatrix
+        if terms and (terms[0] in mapMatrix.keys()):
+            await on_command(message,channel, mapMatrix[terms[0]]['map'],fixed)
+        else:
+            global mapList
+            await on_command(message,channel, mapList,fixed)
+    commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.')])})
+
+    # +routing
+    # Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+    async def routingQuery(message,channel,terms,fixed):
+        global mapMatrix
+        if terms and terms[0] in mapMatrix.keys():
+            await on_command(message,channel, mapMatrix[terms[0]]['rte'],fixed)
+        else:
+            global mapList
+            await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
+    commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.')])})
+
+    # +drops
+    # Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+    async def dropQuery(message,channel,terms,fixed):
+        global mapMatrix
+        if terms and terms[0] in mapMatrix.keys():
+            await on_command(message,channel, mapMatrix[terms[0]]['drp'],fixed)
+        else:
+            global mapList
+            await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
+    commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns notable drops for that map. If no code, returns list of available maps.')])})
+
+    # +avatar
+    # Returns url for akizuki's current avatar
+    async def getAvatar(message,channel,terms=None,fixed=False) :
+        if bot.user.avatar_url :
+            await on_command(message,channel,bot.user.avatar_url,fixed)
+        else:
+            await on_command(message,channel,bot.user.default_avatar_url,False,10)
+    commandMatrix.update({'avatar':dict([('cl', ['avatar','icon','dp']), ('do', getAvatar), ('tr', None), ('of', 'Returns the url for `akizuki`\'s current avatar.')])})
+
+    # +commands
+    # List all commands. If requester is admin, DM them a list of admin commands.
+    async def commandsQuery(message,channel,terms=None,fixed=False) :
+        global commandList
+        if message.author.id in admins :
+            # await on_command_DM(message,'Admin-only commands: `' + command_prefix + ('`, `'+command_prefix).join(list(adminMatrix.keys()))+'`')
+            await on_command_DM(message,'Admin-only commands: ```' + command_prefix + (', '+command_prefix).join(list(adminMatrix.keys()))+'```')
+        await on_command(message,channel,commandList,fixed)
+    commandMatrix.update({'commands':dict([('cl', ['commands','command']), ('do', commandsQuery), ('tr', None), ('of', 'Lists possible `akizuki` commands.')])})
+
+    # +help
+    # Provides helptext for each `akizuki` command, or general helptext if no command is queried.
+    async def helpQuery(message,channel,terms=None,fixed=False):
+        global commandDict
+        if terms :
+            if (terms[0] in commandDict.keys()) :
+                if commandMatrix[commandDict[terms[0]]]['tr'] is not None :
+                    await on_command(message,channel,'`'+command_prefix+terms[0]+' '+commandMatrix[commandDict[terms[0]]]['tr']+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
+                else :
+                    await on_command(message,channel,'`'+command_prefix+terms[0]+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
+            else :
+                await on_command(message,channel, 'No such command found.',False,10)
+        else :
+            await on_command(message,channel,'Use `'+command_prefix+'commands` for a list of available commands, `'+command_prefix+'help [command]` for details on each specific command, and `'+command_prefix+'repo` to see and contribute to my Github repository. Use `'+command_prefix+command_prefix+'` if you\'d like to sticky a response from me.\nFor support, please create an issue on Github or contact Storian Logi.',fixed)
+    commandMatrix.update({'help':dict([('cl', ['help']), ('do', helpQuery), ('tr', '[command]'), ('of', 'Provides helptext for each `akizuki` command, or general helptext if no command is queried.')])})
+
+
+
+    # actual bot config
+    global servers
+    global channels
+    global admins
+
+    config = yaml.load(open('config.yaml','r'))
+
+    if isinstance(config['servers'],list):
+        servers = [bot.get_server(str(s)) for s in config['servers']]
+    else:
+        servers = [bot.get_server(str(config['servers'])),]
+
+    # TODO: test with single channel
+    if isinstance(config['channels'],list):
+        channels = [discord.Object(c) for c in config['channels']]
+    else:
+        channels = [discord.Object(config['channels']),]
+
+    # TODO: test with multiple admins
+    if isinstance(config['admins'],list):
+        admins = [str(a) for a in config['admins']]
+    else:
+        admins = [str(config['admins']),]
+
+    global token
+    token = config['token']
+
+    captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
+
+
+
+
 
 
 
 # Commands only usable by users with admin-listed ids
 adminMatrix = {}
 adminMatrix.update(dict.fromkeys(['ping'], 'ポン!'))
+
+# +update
+def updateOnCommand(message):
+    update()
+    asyncio.ensure_future(on_command_DM(message,'commandMatrix, questMatrix, servers, channels, admins updated.'))
 adminMatrix.update(dict.fromkeys(['update'], updateOnCommand))
 
 # +avatar
@@ -305,129 +464,6 @@ adminMatrix.update(dict.fromkeys(['shutdown','sd'], shutdown))
 
 
 
-# Commands too complicated to (easily) load in via yaml.
-# The call in on_message provides (message,message.channel,terms,fixed) which must be included in arguments for commands added to the commandMatrix even if they aren't used or else we get a runtime error.
-# There's probably a way to bypass this in python but I don't know it.
-
-# +search
-# Searches the kc wikia and returns the first result
-async def searchKCWikia(message,channel,terms,fixed):
-    if terms:
-        searchTerm = ' '.join(terms)
-        searchURL = urllib.parse.quote_plus(searchTerm)
-        searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
-        if 'items' in searched:
-            await on_command(message,channel, searched['items'][0]['url'],fixed)
-        else:
-            await on_command(message,channel, 'No result found.',False,10)
-commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
-
-# +wikia
-# If no terms provided in the discord message, returns link to kc wikia main page
-# If terms provided, returns a key kc wikia url or searches the wikia and returns the first result
-async def callKCWikia(message,channel,terms,fixed):
-    global wikiMatrix
-    searched = ' '.join(terms)
-    if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wka'] :
-        await on_command(message,channel, wikiMatrix[searched]['wka'],fixed)
-    elif terms :
-        await searchKCWikia(message,channel,terms,fixed)
-    else :
-        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[term(s)]'), ('of', 'Returns a key kc wikia url or searches the wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
-
-# +wikiwiki
-# If no terms provided in the discord message, returns link to kc wikiwiki main page
-# If terms provided, returns a key kc wikiwiki url or assumes no terms and returns link to kc wikiwiki main page
-async def callKCWikiWiki(message,channel,terms,fixed):
-    global wikiMatrix
-    searched = ' '.join(terms)
-    if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wkw'] :
-        await on_command(message,channel, wikiMatrix[searched]['wkw'],fixed)
-    else :
-        await on_command(message,channel, 'http://wikiwiki.jp/kancolle/',fixed)
-commandMatrix.update({'wikiwiki':dict([('cl', ['wikiwiki']), ('do', callKCWikiWiki), ('tr', '[term(s)]'), ('of', 'Returns a key wikiwiki url. If no terms or non-key term, returns the url for the Japanese Kancolle wikiwiki.')])})
-
-# +quest
-# Takes quest code and returns description from kc3kai translations
-async def questQuery(message,channel,terms,fixed):
-    if terms[0] in questMatrix.keys():
-        await on_command(message,channel, questMatrix[terms[0]],fixed)
-    else:
-        await on_command(message,channel, 'No such quest found.',False,10)
-commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
-
-# +map
-# Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.
-async def mapQuery(message,channel,terms,fixed):
-    global mapMatrix
-    if terms and (terms[0] in mapMatrix.keys()):
-        await on_command(message,channel, mapMatrix[terms[0]]['map'],fixed)
-    else:
-        global mapList
-        await on_command(message,channel, mapList,fixed)
-commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.')])})
-
-# +routing
-# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
-async def routingQuery(message,channel,terms,fixed):
-    global mapMatrix
-    if terms and terms[0] in mapMatrix.keys():
-        await on_command(message,channel, mapMatrix[terms[0]]['rte'],fixed)
-    else:
-        global mapList
-        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
-commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.')])})
-
-# +drops
-# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
-async def dropQuery(message,channel,terms,fixed):
-    global mapMatrix
-    if terms and terms[0] in mapMatrix.keys():
-        await on_command(message,channel, mapMatrix[terms[0]]['drp'],fixed)
-    else:
-        global mapList
-        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
-commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns notable drops for that map. If no code, returns list of available maps.')])})
-
-# +avatar
-# Returns url for akizuki's current avatar
-async def getAvatar(message,channel,terms=None,fixed=False) :
-    if bot.user.avatar_url :
-        await on_command(message,channel,bot.user.avatar_url,fixed)
-    else:
-        await on_command(message,channel,bot.user.default_avatar_url,False,10)
-commandMatrix.update({'avatar':dict([('cl', ['avatar','icon','dp']), ('do', getAvatar), ('tr', None), ('of', 'Returns the url for `akizuki`\'s current avatar.')])})
-
-# +commands
-# List all commands. If requester is admin, DM them a list of admin commands.
-async def commandsQuery(message,channel,terms=None,fixed=False) :
-    global commandList
-    if message.author.id in admins :
-        # await on_command_DM(message,'Admin-only commands: `' + command_prefix + ('`, `'+command_prefix).join(list(adminMatrix.keys()))+'`')
-        await on_command_DM(message,'Admin-only commands: ```' + command_prefix + (', '+command_prefix).join(list(adminMatrix.keys()))+'```')
-    await on_command(message,channel,commandList,fixed)
-commandMatrix.update({'commands':dict([('cl', ['commands','command']), ('do', commandsQuery), ('tr', None), ('of', 'Lists possible `akizuki` commands.')])})
-
-# +help
-# Provides helptext for each `akizuki` command, or general helptext if no command is queried.
-async def helpQuery(message,channel,terms=None,fixed=False):
-    global commandDict
-    if terms :
-        if (terms[0] in commandDict.keys()) :
-            if commandMatrix[commandDict[terms[0]]]['tr'] is not None :
-                await on_command(message,channel,'`'+command_prefix+terms[0]+' '+commandMatrix[commandDict[terms[0]]]['tr']+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
-            else :
-                await on_command(message,channel,'`'+command_prefix+terms[0]+'` '+commandMatrix[commandDict[terms[0]]]['of'],fixed)
-        else :
-            await on_command(message,channel, 'No such command found.',False,10)
-    else :
-        await on_command(message,channel,'Use `'+command_prefix+'commands` for a list of available commands, `'+command_prefix+'help [command]` for details on each specific command, and `'+command_prefix+'repo` to see and contribute to my Github repository. Use `'+command_prefix+command_prefix+'` if you\'d like to sticky a response from me.\nFor support, please create an issue on Github or contact Storian Logi.',fixed)
-commandMatrix.update({'help':dict([('cl', ['help']), ('do', helpQuery), ('tr', '[command]'), ('of', 'Provides helptext for each `akizuki` command, or general helptext if no command is queried.')])})
-
-
-
-
 # Timed messages using schedule. This stuff works but can only do as far as weeklies.
 # Will need to switch to APscheduler for more comprehensive reminders.
 def construct_reminder_func(message):
@@ -488,44 +524,6 @@ async def on_ready():
 
 
 
-# for use in channels
-async def on_command(message,channel,text,fixed=False,time=60):
-    try:
-        d = await bot.send_message(channel,text)
-    except discord.errors.Forbidden:
-        pass    
-    if not fixed:
-        await asyncio.sleep(time)
-        await bot.delete_message(d)
-        try:
-            await bot.delete_message(message)
-        except (discord.errors.Forbidden, discord.errors.NotFound):
-            return
-
-# for use in in-channel commands returning a DM (eg +help)
-async def on_command_DM(message,text):
-    await bot.send_message(message.author,text)
-    try:
-        await bot.delete_message(message)
-    except (discord.errors.Forbidden, discord.errors.NotFound):
-        return
-
-# compiles report to be logged/printed
-def commandReport(message,command,fixed,terms=''):
-    command = command_prefix + command
-    if fixed:
-        command = command_prefix + command
-    if terms:
-        terms = ' '.join(terms)
-        command = command + ' ' + terms
-    if message.channel.is_private:
-        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> DM'
-    else:
-        report = command + ' by ' + message.author.name + ' <@' + message.author.id + '> in #' + message.channel.name + ' <#' + message.channel.id + '> of ' + message.server.name + ' (ID#' + message.server.id  + ')'
-    return report
-
-
-
 # discord.py Bot class commands don't work, so Bot is used as an extension of Client.
 @bot.event
 async def on_message(message):
@@ -561,6 +559,9 @@ async def on_message(message):
     terms = parsed_message[1:]
     print(command)
 
+    global commandMatrix
+    global commandList
+    global commandDict
     # any function that responds to a message will take the triggering message "message", whether or not to not delete the triggering message and its reponse "fixed", and any additional terms that refine the general command "terms"
     # if an admin command and a regular command have the same trigger (e.g. _avatar), the admin command takes priority
     if (command in list(adminMatrix.keys())) and (message.author.id in admins) and message.channel.is_private:
@@ -581,12 +582,14 @@ async def on_message(message):
             await on_command(message,message.channel,todo,fixed) # TODO: need to account for commands not intended to last for 60s
         elif callable(todo):
             captainsLog.info(commandReport(message,command,fixed))
-            asyncio.ensure_future(todo(message,message.channel,terms,fixed)) # note the await. none of these commands will not involve posting something to discord (and therefore requiring an await)
+            asyncio.ensure_future(todo(message,message.channel,terms,fixed))
         else:
             captainsLog.warning('something went wrong with ' + message.content[:(prefix_len-1)] + command)
         return
     else :
         return
+
+update()
 
 global token
 bot.run(token)
