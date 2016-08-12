@@ -5,10 +5,52 @@
 #     wkw: [link to key in wikiwiki]
 # leave blank if you don't want to include a key to one or the other
 
-main:
-    wka: http://kancolle.wikia.com/wiki/Kancolle_Wiki
-    wkw: http://wikiwiki.jp/kancolle/
+# make all keys lowercase
 
-main page:
-    wka: http://kancolle.wikia.com/wiki/Kancolle_Wiki
-    wkw: http://wikiwiki.jp/kancolle/
+event:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event
+    wkw: 
+
+summer:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event
+    wkw: 
+
+summer event:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event
+    wkw: 
+
+event faq:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/Mechanics
+    wkw: 
+
+e-1:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-1
+    wkw: 
+
+e1:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-1
+    wkw: 
+
+e-2:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-2
+    wkw: 
+
+e2:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-2
+    wkw: 
+
+e-3:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-3
+    wkw: 
+
+e3:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-3
+    wkw: 
+
+e-4:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-4
+    wkw: 
+
+e4:
+    wka: http://kancolle.wikia.com/wiki/Summer_2016_Event/E-4
+    wkw: 

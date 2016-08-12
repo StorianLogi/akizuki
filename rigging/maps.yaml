@@ -11,12 +11,24 @@
 # NOTE!!! Due to the way the import is written, removing a map from maps.yaml and calling +update will NOT completely remove it from the commands list without a restart of `akizuki`. Be VERY CAREFUL when adding new maps (or at least map codes) to te list!
 # TODO: fix this
 
-1-1:
-    map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
-    rte: Basically anything works. Random routing. Good for sparkling the flagship.
-    drp: None notable.
+# make sure E's are in CAPITALS
 
-1-2:
-    map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
-    rte: Basically anything works. Random routing.
-    drp: None notable.
+E-1:
+    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
+    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
+    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
+
+E-2:
+    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
+    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
+    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
+
+E-3:
+    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
+    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
+    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
+
+E-4:
+    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
+    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
+    drp: Not yet known. (Updated 8/11 10:30 PM PDT)

@@ -13,17 +13,11 @@
 # Remember to precede ' and " with \ as these strings will have to pass through python/yaml syntax before reaching users.
 
 # Kancolle commands
-improvements:
-    cl: [improvements, improvement, improve, akashi]
-    do: http://akashi-list.me/
-    tr: 
-    of: Returns the url for `akashi-list.me`
-
-# wikiwiki:
-#     cl: [wikiwiki]
-#     do: http://wikiwiki.jp/kancolle/
+# improvements:
+#     cl: [improvements, improvement, improve, akashi]
+#     do: http://akashi-list.me/
 #     tr: 
-#     of: Returns the url for the Japanese Kancolle wikiwiki
+#     of: Returns the url for `akashi-list.me`
 
 galstars:
     cl: [galstars]
@@ -74,25 +68,24 @@ twitch:
     of: Returns the url for the Kantai Collection page on Twitch.
 
 
+# # memes
+# poi:
+#     cl: [poi]
+#     do: http://anohito.tw/poi/
+#     tr: 
+#     of: Poi!
 
-# memes
-poi:
-    cl: [poi]
-    do: http://anohito.tw/poi/
-    tr: 
-    of: Poi!
-
-orel:
-    cl: [orel]
-    do: https://www.youtube.com/watch?v=PKQl39epgmo
-    tr: 
-    of: Mutsu ni naru~
+# orel:
+#     cl: [orel]
+#     do: https://www.youtube.com/watch?v=PKQl39epgmo
+#     tr: 
+#     of: Mutsu ni naru~
 
 
 # meta commands
 info:
     cl: [info]
-    do: Open source discord helper `akizuki`, reporting in! Developed by Storian Logi as his first Python project, `akizuki` will do her best!
+    do: This is the Summer 2016 beta test of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
     tr: 
     of: Gives basic information on `akizuki`.
 
@@ -106,4 +99,23 @@ credits:
     cl: [credit, credits]
     do: Credit to ComoNaD for teaching Logi how to write in Python, the members of Nasujima Anchorage for helping to run and bugtest `akizuki`, and ridomiridoriyo for inspiring this project by creating the first widely implemented Kancolle bot for Discord.
     tr: 
-    of: Recognizes a few people for their contributions to this `akizuki` beta.
+    of: Recognizes a few people for their contributions to `akizuki`.
+
+
+
+# event-specific stuff
+event:
+    cl: [event, summer event, summer]
+    do: |
+        Event-specific commands for `akizuki` (map codes are formatted `E-#`):
+        ```+[map code], +routing [code], +drops [code], +shiplocks, +wikia [search term(s)], and more```
+        If you spot any new or updated event info not included in `akizuki`'s commands, please contact Storian Logi.
+        (Updated 8/11 10:30 PM PDT)
+    tr: 
+    of: Returns event-relevant information about `akizuki`.
+
+shiplocks:
+    cl: [shiplocks, shiplock, locks, lock]
+    do: Not yet known. (Updated 8/11 10:30 PM PDT)
+    tr: 
+    of: Returns image link to event shiplocks chart.

@@ -1,0 +1,6 @@
+emove wikiwiki from orders.yaml
+reword credits['of']
+edit updateOnCommand to remove doubled ensure_future
+make +maps not case sensitive
+make wikia/wikiwiki keys not case sensitive (using .upper())
+basically drop .lower() everywhere (+quest too?)

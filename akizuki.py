@@ -61,18 +61,19 @@ def update():
         thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
         commandMatrix.update(thing)
 
-    global questMatrix
-    questMatrix = {}
-    for key in questData.keys():
-        questCode = questData[key]['code']
-        questMatrix.update({questCode.lower():dict([('cl', [questCode.lower()]), ('do', 'Quest '+questCode+': '+questData[key]['desc']), ('tr', None), ('of', 'Returns the translated description for quest '+questCode+' from the kc3kai translations database.')])}) 
-    commandMatrix.update(questMatrix)
+    # global questMatrix
+    # questMatrix = {}
+    # for key in questData.keys():
+    #     questCode = questData[key]['code']
+    #     questMatrix.update({questCode.lower():dict([('cl', [questCode.lower()]), ('do', 'Quest '+questCode+': '+questData[key]['desc']), ('tr', None), ('of', 'Returns the translated description for quest '+questCode+' from the kc3kai translations database.')])}) 
+    # commandMatrix.update(questMatrix)
 
     global commandDict # takes command dupes and allows us to find their dict entry in commandMatrix
     global commandList # abriged to remove dupes
     commandList = []
     for k in commandMatrix.keys() :
-        if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
+        # if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
+        if (k not in mapMatrix.keys()):
             if commandMatrix[k]['tr'] :
                 commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
             else :
@@ -115,13 +116,14 @@ def update():
     global token
     token = config['token']
 
-    captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
+    # captainsLog.info('commandMatrix, questMatrix, servers, channels, admins updated.')
+    captainsLog.info('commandMatrix, servers, channels, admins updated.')
 
 update()
 
-def updateOnCommand(message):
+async def updateOnCommand(message):
     update()
-    asyncio.ensure_future(on_command_DM(message,'commandMatrix, questMatrix, servers, channels, admins updated.'))
+    await on_command_DM(message,'commandMatrix, servers, channels, admins updated.')
 
 async def send_to_all_channels(message: str) :
     global channels
@@ -307,7 +309,7 @@ adminMatrix.update(dict.fromkeys(['shutdown','sd'], shutdown))
 # Searches the kc wikia and returns the first result
 async def searchKCWikia(message,channel,terms,fixed):
     if terms:
-        searchTerm = ' '.join(terms)
+        searchTerm = ' '.join(terms).lower()
         searchURL = urllib.parse.quote_plus(searchTerm)
         searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
         if 'items' in searched:
@@ -321,7 +323,7 @@ commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), 
 # If terms provided, returns a key kc wikia url or searches the wikia and returns the first result
 async def callKCWikia(message,channel,terms,fixed):
     global wikiMatrix
-    searched = ' '.join(terms)
+    searched = ' '.join(terms).lower()
     if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wka'] :
         await on_command(message,channel, wikiMatrix[searched]['wka'],fixed)
     elif terms :
@@ -335,54 +337,57 @@ commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia
 # If terms provided, returns a key kc wikiwiki url or assumes no terms and returns link to kc wikiwiki main page
 async def callKCWikiWiki(message,channel,terms,fixed):
     global wikiMatrix
-    searched = ' '.join(terms)
+    searched = ' '.join(terms).lower()
     if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wkw'] :
         await on_command(message,channel, wikiMatrix[searched]['wkw'],fixed)
     else :
         await on_command(message,channel, 'http://wikiwiki.jp/kancolle/',fixed)
 commandMatrix.update({'wikiwiki':dict([('cl', ['wikiwiki']), ('do', callKCWikiWiki), ('tr', '[term(s)]'), ('of', 'Returns a key wikiwiki url. If no terms or non-key term, returns the url for the Japanese Kancolle wikiwiki.')])})
 
-# +quest
-# Takes quest code and returns description from kc3kai translations
-async def questQuery(message,channel,terms,fixed):
-    if terms[0] in questMatrix.keys():
-        await on_command(message,channel, questMatrix[terms[0]],fixed)
-    else:
-        await on_command(message,channel, 'No such quest found.',False,10)
-commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
+# # +quest
+# # Takes quest code and returns description from kc3kai translations
+# async def questQuery(message,channel,terms,fixed):
+#     if terms[0] in questMatrix.keys():
+#         await on_command(message,channel, questMatrix[terms[0]],fixed)
+#     else:
+#         await on_command(message,channel, 'No such quest found.',False,10)
+# commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr', '[code]'), ('of', 'Returns the translated quest description for a given quest code from the kc3kai translations database.')])})
 
 # +map
-# Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.
+# Takes map code "_-#" (e.g. E-1) and returns description link to map image. If no code, returns list of available maps.
 async def mapQuery(message,channel,terms,fixed):
     global mapMatrix
-    if terms and (terms[0] in mapMatrix.keys()):
-        await on_command(message,channel, mapMatrix[terms[0]]['map'],fixed)
+    code = terms[0].upper()
+    if terms and (code in mapMatrix.keys()):
+        await on_command(message,channel, mapMatrix[code]['map'],fixed)
     else:
         global mapList
         await on_command(message,channel, mapList,fixed)
-commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.')])})
+commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns description link to map image. If no code, returns list of available maps.')])})
 
 # +routing
-# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+# Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.
 async def routingQuery(message,channel,terms,fixed):
     global mapMatrix
-    if terms and terms[0] in mapMatrix.keys():
-        await on_command(message,channel, mapMatrix[terms[0]]['rte'],fixed)
+    code = terms[0].upper()
+    if terms and (code in mapMatrix.keys()):
+        await on_command(message,channel, mapMatrix[code]['rte'],fixed)
     else:
         global mapList
         await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
-commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.')])})
+commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.')])})
 
 # +drops
-# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+# Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.
 async def dropQuery(message,channel,terms,fixed):
     global mapMatrix
-    if terms and terms[0] in mapMatrix.keys():
-        await on_command(message,channel, mapMatrix[terms[0]]['drp'],fixed)
+    code = terms[0].upper()
+    if terms and (code in mapMatrix.keys()):
+        await on_command(message,channel, mapMatrix[code]['drp'],fixed)
     else:
         global mapList
         await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
-commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns notable drops for that map. If no code, returns list of available maps.')])})
+commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns notable drops for that map. If no code, returns list of available maps.')])})
 
 # +avatar
 # Returns url for akizuki's current avatar
@@ -422,34 +427,34 @@ commandMatrix.update({'help':dict([('cl', ['help']), ('do', helpQuery), ('tr', '
 
 
 
-# Timed messages using schedule. This stuff works but can only do as far as weeklies.
-# Will need to switch to APscheduler for more comprehensive reminders.
-def construct_reminder_func(message):
-    return lambda: asyncio.ensure_future(send_to_all_channels(message))
+# # Timed messages using schedule. This stuff works but can only do as far as weeklies.
+# # Will need to switch to APscheduler for more comprehensive reminders.
+# def construct_reminder_func(message):
+#     return lambda: asyncio.ensure_future(send_to_all_channels(message))
 
-pvp_reset_early = construct_reminder_func('PVP reset in 1 hour.\n(Ranking point cutoff for this cycle now.)')
-pvp_reset = construct_reminder_func('PVP reset')
-quest_reset_early = construct_reminder_func('Quest reset in 1 hour.')
-quest_reset = construct_reminder_func('Quest reset.')
-weekly_reset_early = construct_reminder_func('It\'s a weekly reset, too!')
-weekly_reset = construct_reminder_func('Weekly reset.')
+# pvp_reset_early = construct_reminder_func('PVP reset in 1 hour.\n(Ranking point cutoff for this cycle now.)')
+# pvp_reset = construct_reminder_func('PVP reset')
+# quest_reset_early = construct_reminder_func('Quest reset in 1 hour.')
+# quest_reset = construct_reminder_func('Quest reset.')
+# weekly_reset_early = construct_reminder_func('It\'s a weekly reset, too!')
+# weekly_reset = construct_reminder_func('Weekly reset.')
 
-async def scheduledposts():
-    captainsLog.info('Posts have been scheduled.')
-    while not bot.is_closed:
-        schedule.run_pending()
-        await asyncio.sleep(15) # Change to 30 or 60 if too intensive to run.
+# async def scheduledposts():
+#     captainsLog.info('Posts have been scheduled.')
+#     while not bot.is_closed:
+#         schedule.run_pending()
+#         await asyncio.sleep(15) # Change to 30 or 60 if too intensive to run.
 
-def initialize_schedule():
-    # currently running off a laptop in PDT
-    schedule.every().day.at("10:00").do(pvp_reset_early) # 2 JST
-    schedule.every().day.at("22:00").do(pvp_reset_early) # 14 JST
-    schedule.every().day.at("11:00").do(pvp_reset) # 3 JST
-    schedule.every().day.at("23:00").do(pvp_reset) # 15 JST
-    schedule.every().day.at("12:00").do(quest_reset_early) # 4 JST
-    schedule.every().day.at("13:00").do(quest_reset) # 5 JST
-    schedule.every().sunday.at("12:00").do(weekly_reset_early) # Monday 4 JST
-    schedule.every().sunday.at("13:00").do(weekly_reset) # Monday 4 JST
+# def initialize_schedule():
+#     # currently running off a laptop in PDT
+#     schedule.every().day.at("10:00").do(pvp_reset_early) # 2 JST
+#     schedule.every().day.at("22:00").do(pvp_reset_early) # 14 JST
+#     schedule.every().day.at("11:00").do(pvp_reset) # 3 JST
+#     schedule.every().day.at("23:00").do(pvp_reset) # 15 JST
+#     schedule.every().day.at("12:00").do(quest_reset_early) # 4 JST
+#     schedule.every().day.at("13:00").do(quest_reset) # 5 JST
+#     schedule.every().sunday.at("12:00").do(weekly_reset_early) # Monday 4 JST
+#     schedule.every().sunday.at("13:00").do(weekly_reset) # Monday 4 JST
 
 # # Timed messages using APscheduler
 # scheduler = AsyncIOScheduler()
@@ -473,9 +478,9 @@ async def on_ready():
     print('      ID: ' + bot.user.id)
     print('------')
     update()
-    # Scheduled messages using schedule
-    asyncio.ensure_future(scheduledposts())
-    initialize_schedule()
+    # # Scheduled messages using schedule
+    # asyncio.ensure_future(scheduledposts())
+    # initialize_schedule()
 
     # Startup message
     await sendToAllAdmins('`akizuki`, setting sail!')
@@ -539,7 +544,8 @@ async def on_message(message):
         if (message.author.id not in admins or (not message.content.startswith(command_prefix))) :
             return
     # akizuki shouldn't listen to things that aren't commands or servers that aren't whitelisted
-    elif (message.server not in servers or (not message.content.startswith(command_prefix))) :
+    # elif (message.server not in servers or (not message.content.startswith(command_prefix))) :
+    elif not message.content.startswith(command_prefix) :
         return
 
     # Determines if command is fixed, what the command is, and what the terms are
