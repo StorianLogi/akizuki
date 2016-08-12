@@ -3,13 +3,17 @@
 # [map name in format X-#]:
 #     map: [imgur/wikia link to map]
 #     rte: [info/routing information]
+#     drp: [list of notable/rare drops, separated by commas. if no notable drops, say "None notable."]
 
 # Consider adding AS values/descriptions
+# If so, remember to rewrite akizuki.py as well
 
 1-1:
     map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
     rte: Basically anything works. Random routing. Good for sparkling the flagship.
+    drp: None notable.
 
 1-2:
     map: http://vignette2.wikia.nocookie.net/kancolle/images/d/d5/1-1_Map.jpg/revision/latest/scale-to-width-down/375?cb=20130831102525
     rte: Basically anything works. Random routing.
+    drp: None notable.

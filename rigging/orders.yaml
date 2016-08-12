@@ -19,11 +19,11 @@ improvements:
     tr: 
     of: Returns the url for `akashi-list.me`
 
-wikiwiki:
-    cl: [wikiwiki]
-    do: http://wikiwiki.jp/kancolle/
-    tr: 
-    of: Returns the url for the Japanese Kancolle wikiwiki
+# wikiwiki:
+#     cl: [wikiwiki]
+#     do: http://wikiwiki.jp/kancolle/
+#     tr: 
+#     of: Returns the url for the Japanese Kancolle wikiwiki
 
 galstars:
     cl: [galstars]
@@ -92,7 +92,7 @@ orel:
 # meta commands
 info:
     cl: [info]
-    do: This is the Summer 2016 beta test of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
+    do: Open source discord helper `akizuki`, reporting in! Developed by Storian Logi as his first Python project, `akizuki` will do her best!
     tr: 
     of: Gives basic information on `akizuki`.
 

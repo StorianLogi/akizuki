@@ -1,0 +1,14 @@
+# KC Wikia and WikiWiki search keys for akizuki
+
+# [search key or term]:
+#     wka: [link to key in wikia]
+#     wkw: [link to key in wikiwiki]
+# leave blank if you don't want to include a key to one or the other
+
+main:
+    wka: http://kancolle.wikia.com/wiki/Kancolle_Wiki
+    wkw: http://wikiwiki.jp/kancolle/
+
+main page:
+    wka: http://kancolle.wikia.com/wiki/Kancolle_Wiki
+    wkw: http://wikiwiki.jp/kancolle/

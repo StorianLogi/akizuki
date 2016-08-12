@@ -1,18 +1,18 @@
 
 
-import discord # definitely not native
+import discord # requires install
 from discord.ext import commands
 
 import datetime, re
-import schedule # not native
-import json # not native iirc
+import schedule # requires install
+import json # requires install
 import time
-import yaml # not native iirc
-import asyncio  # not native iirc
+import yaml # requires install (pyyaml)
+import asyncio  # requires install
 import sys
-import shlex # built-in to 3.5
+import shlex
 import requests
-import urllib.parse # built-in to 3.5
+import urllib.parse
 from typing import List
 import logging
 
@@ -60,14 +60,12 @@ def update():
     global mapMatrix
     global mapList
     mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
-    mapList = list(mapMatrix.keys()).sort()
-    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapMatrix.keys())+'```'
+    mapList = list(mapMatrix.keys())
+    mapList.sort()
+    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapList)+'```'
     for key in mapMatrix.keys():
-        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+':'+mapMatrix[key]['rte']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information and link to map image for '+key+'.')])}
-        print(thing)
+        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
         commandMatrix.update(thing)
-        print(commandMatrix)
-        #NEEDS SEVERE DEBUGGING
 
     global questMatrix
     questMatrix = {}
@@ -88,8 +86,11 @@ def update():
         for l in commandMatrix[k]['cl'] :
             commandDict.update({l:k})
     commandList.sort()
-    # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.'
-    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command]`.'
+    # commandList = 'Non-exhaustive list of commands (note that some take arguments):\n`'+command_prefix+('`, `'+command_prefix).join(commandList) + '`\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command (optional)]`.' # discord code markup each individual command 
+    commandList = 'Non-exhaustive list of commands (note that some take arguments):\n```'+command_prefix+(', '+command_prefix).join(commandList) + '```\nUse `'+command_prefix+command_prefix+'` if you\'d like to make your command and my response sticky.\nFor more information about a specific command, call `'+command_prefix+'help [command]`.' # discord block code markup
+
+    global wikiMatrix # kc wiki and wikia bypass keywords
+    wikiMatrix = yaml.load(open('rigging/wikiKeys.yaml','r'))
 
 
 
@@ -100,7 +101,6 @@ def update():
 
     config = yaml.load(open('config.yaml','r'))
 
-    #TODO: test with multiple servers
     if isinstance(config['servers'],list):
         servers = [bot.get_server(str(s)) for s in config['servers']]
     else:
@@ -312,27 +312,41 @@ adminMatrix.update(dict.fromkeys(['shutdown','sd'], shutdown))
 # +search
 # Searches the kc wikia and returns the first result
 async def searchKCWikia(message,channel,terms,fixed):
-    searchTerm = ' '.join(terms)
-    searchURL = urllib.parse.quote_plus(searchTerm)
-    if not searchTerm:
-        await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-    else:
-            searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
-            if 'items' in searched:
-                await on_command(message,channel, searched['items'][0]['url'],fixed)
-            else:
-                await on_command(message,channel, 'No result found.',False,10)
+    if terms:
+        searchTerm = ' '.join(terms)
+        searchURL = urllib.parse.quote_plus(searchTerm)
+        searched = requests.get('http://kancolle.wikia.com/api/v1/Search/List?query='+searchURL).json()
+        if 'items' in searched:
+            await on_command(message,channel, searched['items'][0]['url'],fixed)
+        else:
+            await on_command(message,channel, 'No result found.',False,10)
 commandMatrix.update({'search':dict([('cl', ['search']), ('do', searchKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result.')])})
 
 # +wikia
 # If no terms provided in the discord message, returns link to kc wikia main page
-# If terms provided, searches kc wikia and returns first result
+# If terms provided, returns a key kc wikia url or searches the wikia and returns the first result
 async def callKCWikia(message,channel,terms,fixed):
-    if terms :
+    global wikiMatrix
+    searched = ' '.join(terms)
+    if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wka'] :
+        await on_command(message,channel, wikiMatrix[searched]['wka'],fixed)
+    elif terms :
         await searchKCWikia(message,channel,terms,fixed)
     else :
         await on_command(message,channel, 'http://kancolle.wikia.com/wiki/Kancolle_Wiki',fixed)
-commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[term(s)]'), ('of', 'Searches the kc wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
+commandMatrix.update({'wikia':dict([('cl', ['wiki','wikia']), ('do', callKCWikia), ('tr', '[term(s)]'), ('of', 'Returns a key kc wikia url or searches the wikia and returns the first result. If no search terms, returns the url for the kc wikia main page.')])})
+
+# +wikiwiki
+# If no terms provided in the discord message, returns link to kc wikiwiki main page
+# If terms provided, returns a key kc wikiwiki url or assumes no terms and returns link to kc wikiwiki main page
+async def callKCWikiWiki(message,channel,terms,fixed):
+    global wikiMatrix
+    searched = ' '.join(terms)
+    if (searched in wikiMatrix.keys()) and wikiMatrix[searched]['wkw'] :
+        await on_command(message,channel, wikiMatrix[searched]['wkw'],fixed)
+    else :
+        await on_command(message,channel, 'http://wikiwiki.jp/kancolle/',fixed)
+commandMatrix.update({'wikiwiki':dict([('cl', ['wikiwiki']), ('do', callKCWikiWiki), ('tr', '[term(s)]'), ('of', 'Returns a key wikiwiki url. If no terms or non-key term, returns the url for the Japanese Kancolle wikiwiki.')])})
 
 # +quest
 # Takes quest code and returns description from kc3kai translations
@@ -347,7 +361,7 @@ commandMatrix.update({'quest':dict([('cl', ['quest']), ('do', questQuery), ('tr'
 # Takes map code "_-#" (e.g. 4-3) and returns description link to map image. If no code, returns list of available maps.
 async def mapQuery(message,channel,terms,fixed):
     global mapMatrix
-    if terms and terms[0] in mapMatrix.keys():
+    if terms and (terms[0] in mapMatrix.keys()):
         await on_command(message,channel, mapMatrix[terms[0]]['map'],fixed)
     else:
         global mapList
@@ -362,8 +376,19 @@ async def routingQuery(message,channel,terms,fixed):
         await on_command(message,channel, mapMatrix[terms[0]]['rte'],fixed)
     else:
         global mapList
-        await on_command(message,channel, mapList,fixed)
+        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
 commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.')])})
+
+# +drops
+# Takes map code "_-#" (e.g. 4-3) and returns routing information for that map. If no code, returns list of available maps.
+async def dropQuery(message,channel,terms,fixed):
+    global mapMatrix
+    if terms and terms[0] in mapMatrix.keys():
+        await on_command(message,channel, mapMatrix[terms[0]]['drp'],fixed)
+    else:
+        global mapList
+        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
+commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. 4-3) and returns notable drops for that map. If no code, returns list of available maps.')])})
 
 # +avatar
 # Returns url for akizuki's current avatar
@@ -474,7 +499,7 @@ async def on_command(message,channel,text,fixed=False,time=60):
         await bot.delete_message(d)
         try:
             await bot.delete_message(message)
-        except discord.errors.Forbidden:
+        except (discord.errors.Forbidden, discord.errors.NotFound):
             return
 
 # for use in in-channel commands returning a DM (eg +help)
