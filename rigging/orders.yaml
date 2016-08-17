@@ -101,6 +101,11 @@ credits:
     tr: 
     of: Recognizes a few people for their contributions to `akizuki`.
 
+invite:
+    cl: [invite]
+    do: https://discordapp.com/oauth2/authorize?client_id=213505246956093440&scope=bot&permissions=0
+    tr: 
+    of: Grab a link to invite `akizuki` to your server.
 
 
 # event-specific stuff
