@@ -51,14 +51,25 @@ def update():
     commandMatrix.update(yaml.load(open('rigging/orders.yaml','r')))
     questData = requests.get('https://raw.githubusercontent.com/KC3Kai/kc3-translations/master/data/en/quests.json').json()
 
-    global mapMatrix
-    global mapList
-    mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
-    mapList = list(mapMatrix.keys())
-    mapList.sort()
-    mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapList)+'```'
-    for key in mapMatrix.keys():
-        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
+    # global mapMatrix
+    # # global mapList
+    # mapMatrix = yaml.load(open('rigging/maps.yaml','r'))
+    # # mapList = list(mapMatrix.keys())
+    # # mapList.sort()
+    # # mapList = 'Maps in `akizuki`\'s database:\n```'+', '.join(mapList)+'```'
+    # for key in mapMatrix.keys():
+    #     thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+mapMatrix[key]['rte']+'\nNotable drops: '+mapMatrix[key]['drp']+'\n'+mapMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
+    #     commandMatrix.update(thing) # does not include AS value
+
+    # CHANGE THIS BACK TO MAPS AND SIDE LOAD COMBINE THE TWO WHATEVER YOU GET THE IDEA
+    global eventMatrix
+    global eventList
+    eventMatrix = yaml.load(open('rigging/event.yaml','r'))
+    eventList = list(eventMatrix.keys())
+    eventList.sort()
+    eventList = 'Event maps in `akizuki`\'s database:\n```'+', '.join(eventList)+'```'
+    for key in eventMatrix.keys():
+        thing = {key.lower():dict([('cl', [key.lower()]), ('do', 'Map '+key+': '+eventMatrix[key]['rte']+'\nNotable drops: '+eventMatrix[key]['drp']+eventMatrix[key]['map']), ('tr', None), ('of', 'Returns routing information, notable drops, and link to map image for '+key+'.')])}
         commandMatrix.update(thing)
 
     # global questMatrix
@@ -73,7 +84,6 @@ def update():
     commandList = []
     for k in commandMatrix.keys() :
         # if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
-        if (k not in mapMatrix.keys()):
             if commandMatrix[k]['tr'] :
                 commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
             else :
@@ -356,38 +366,69 @@ commandMatrix.update({'wikiwiki':dict([('cl', ['wikiwiki']), ('do', callKCWikiWi
 # +map
 # Takes map code "_-#" (e.g. E-1) and returns description link to map image. If no code, returns list of available maps.
 async def mapQuery(message,channel,terms,fixed):
-    global mapMatrix
-    code = terms[0].upper()
-    if terms and (code in mapMatrix.keys()):
-        await on_command(message,channel, mapMatrix[code]['map'],fixed)
+    # global mapMatrix
+    global eventMatrix
+    # if terms and (terms[0].upper() in mapMatrix.keys()):
+    #     await on_command(message,channel, mapMatrix[terms[0].upper()]['map'],fixed)
+    if terms and (terms[0].upper() in eventMatrix.keys()):
+        await on_command(message,channel, eventMatrix[terms[0].upper()]['map'],fixed)
     else:
-        global mapList
-        await on_command(message,channel, mapList,fixed)
+        # global mapList
+        # await on_command(message,channel, mapList,fixed)
+        global eventList
+        await on_command(message,channel, eventList,fixed)
 commandMatrix.update({'map':dict([('cl', ['map', 'maps']), ('do', mapQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns description link to map image. If no code, returns list of available maps.')])})
 
 # +routing
 # Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.
 async def routingQuery(message,channel,terms,fixed):
-    global mapMatrix
-    code = terms[0].upper()
-    if terms and (code in mapMatrix.keys()):
-        await on_command(message,channel, mapMatrix[code]['rte'],fixed)
+    # global mapMatrix
+    global eventMatrix
+    # if terms and (terms[0].upper() in mapMatrix.keys()):
+    #     await on_command(message,channel, mapMatrix[terms[0].upper()]['rte'],fixed)
+    if terms and (terms[0].upper() in eventMatrix.keys()):
+        await on_command(message,channel, eventMatrix[terms[0].upper()]['rte'],fixed)
     else:
-        global mapList
-        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
+        # global mapList
+        # await on_command(message,channel, 'Please include a supported map code for `akizuki` to reference. '+mapList,fixed,20)
+        global eventList
+        await on_command(message,channel, 'Please include a supported map code for `akizuki` to reference. '+eventList,fixed,20)
 commandMatrix.update({'routing':dict([('cl', ['routing', 'rte']), ('do', routingQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.')])})
 
 # +drops
-# Takes map code "_-#" (e.g. E-1) and returns routing information for that map. If no code, returns list of available maps.
+# Takes map code "_-#" (e.g. E-1) and returns drop information for that map. If no code, returns list of available maps.
 async def dropQuery(message,channel,terms,fixed):
-    global mapMatrix
-    code = terms[0].upper()
-    if terms and (code in mapMatrix.keys()):
-        await on_command(message,channel, mapMatrix[code]['drp'],fixed)
+    # global mapMatrix
+    global eventMatrix
+    # if terms and (terms[0].upper() in mapMatrix.keys()):
+    #     await on_command(message,channel, mapMatrix[terms[0].upper()]['drp'],fixed)
+    if terms and (terms[0].upper() in eventMatrix.keys()):
+        await on_command(message,channel, eventMatrix[terms[0].upper()]['drp'],fixed)
     else:
-        global mapList
-        await on_command(message,channel, 'Please include a map code for `akizuki` to reference. '+mapList,fixed,20)
+        # global mapList
+        # await on_command(message,channel, 'Please include a supportedmap code for `akizuki` to reference. '+mapList,fixed,20)
+        global eventList
+        await on_command(message,channel, 'Please include a supported map code for `akizuki` to reference. '+eventList,fixed,20)
 commandMatrix.update({'drops':dict([('cl', ['drops', 'drop']), ('do', dropQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns notable drops for that map. If no code, returns list of available maps.')])})
+
+# +as
+# TODO: insert as code here
+
+# +rewards
+# Takes map code "_-#" (e.g. E-1) and returns reward information for that map. If no code, returns list of available maps.
+async def rewardQuery(message,channel,terms,fixed):
+    # global mapMatrix
+    global eventMatrix
+    # if terms and (terms[0].upper() in mapMatrix.keys()):
+    #     await on_command(message,channel, mapMatrix[terms[0].upper()]['drp'],fixed)
+    if terms and (terms[0].upper() in eventMatrix.keys()):
+        await on_command(message,channel, eventMatrix[terms[0].upper()]['rwd'],fixed)
+    else:
+        # global mapList
+        # await on_command(message,channel, 'Please include a supportedmap code for `akizuki` to reference. '+mapList,fixed,20)
+        global eventList
+        await on_command(message,channel, 'Please include a supported map code for `akizuki` to reference. '+eventList,fixed,20)
+commandMatrix.update({'rewards':dict([('cl', ['rewards', 'reward', 'rwd']), ('do', rewardQuery), ('tr', '[code]'), ('of', 'Takes map code "_-#" (e.g. E-1) and returns rewards for that map. If no code, returns list of available maps.')])})
 
 # +avatar
 # Returns url for akizuki's current avatar
@@ -488,7 +529,7 @@ async def on_ready():
 
 
 # for use in channels
-async def on_command(message,channel,text,fixed=False,time=60):
+async def on_command(message,channel,text,fixed=False,time=300):
     try:
         d = await bot.send_message(channel,text)
     except discord.errors.Forbidden:

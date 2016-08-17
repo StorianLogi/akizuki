@@ -1,0 +1,82 @@
+# Event map info for akizuki
+
+# [map name in format E-#]:
+#     map: [imgur/wikia link to map]
+#     rte: |
+#          [info/routing information]
+#     drp: |
+#          [list of notable/rare drops, separated by commas, and line breaks per node. if no notable drops, say "None notable."]
+#     rwd: |
+#          [list of clear rewards with line breaks by difficulty]
+
+# remember to add timestamps when relevant
+
+# NOTE!!! Due to the way the import is written, removing a map from maps.yaml and calling +update will NOT completely remove it from the commands list without a restart of `akizuki`. Be VERY CAREFUL when adding new maps (or at least map codes) to te list!
+# TODO: fix this
+
+# make sure Es are in CAPITALS
+
+E-1:
+    map: http://imgur.com/uLk6Tce.png
+    rte: |
+         No CV or slow BB. OASW recommended. Easy 10.06 eLoS, Hard 13.55~22.5 eLoS to Boss.
+         Mid route (recommended): `(1-4CL or 1-2CL 1CLT) 2-5DD 0-1(CVL or CAV)`
+         North route: `1(fBB or CAV or CVL) 1-2CL 0-1CLT 0-2CT 2-3DD`
+    drp: |
+          ```[I/Boss] I-26, Akitsu Maru, Maruyu, Mikuma (all E+)
+          [C] Mizuho, Akitsushima, Mikuma (all E+)```
+    rwd: |
+          ```[E] 1 Mamiya, 1 Irako, 2 riceballs, 1 daihatsu, 1 T96 LBAA
+          [M] 1 Mamiya, 2 Irako, 2 riceballs, 1 t89, 1 T1 LBAA
+          [H] 1 Mamiya, 3 Irako, 2 riceballs, 1 t89, 1 T1 LBAA M34```
+
+E-2:
+    map: http://imgur.com/TyVqpad.png
+    rte: |
+         LBAS. Transport map. Sinking boss is not necessary. Bring drums and daihatsu.
+          `1CL 1(CAV or CLT) 1AV 3DD` and `1CL 5DD` goes FGHIJM
+         Set land base to attain AP or AS at nodes H and I
+    drp: |
+          ```[M/Boss] Prinz, Kashima, Tanikaze, Isokaze, Tokitsukaze, Uzuki (all E+)
+          [I] Tanikaze (M+), Uzuki (E+)
+          [G] Uzuki (H+)
+          [D] Ooyodo, Amatsukaze, Tanikaze, Isokaze (all E+)```
+    rwd: |
+          ```[E] Minazuki, 1 furniture fairy
+          [M] Minazuki, 1 furniture fairy, 1 expansion fairy, 1 T3 Fighter Hien
+          [H] Minazuki, 1 furniture fairy, 2 expansion fairy, 1 T3 Fighter Hien m1D, 1 medal```
+
+E-3:
+    map: http://imgur.com/kwB9R09.png
+    rte: |
+         Use 7 of the following ships (3 in each fleet) to route BCGHJ: Kongou, Haruna, Suzuya, Kumano, Mogami, Mikuma, Choukai, Fubuki, Shirayuki, Hatsuyuki, Kinu, Yura. Debuff by S ranking nodes A, D, G and receiving 0 damage to your air bases at least once each. When completed, you will hear a _ding_ when returning to base. (Updated 8/17)
+         
+         Historical STF: `(2CVL or 1CV) 1BB 2fBB 2CA(V) + 2CA(V) 1fBB 2DD 1CL`
+         Non-historical CTF (routes BCDGHJ): `1CVL 3CV 2BB_ + 1CL 2DD 1CA_ 2fBB` with no Yamato-class in main fleet, no Bismarck in escort, max 1 AO. Alternatively, `1-2BB_ 3-4CV_ 1AO + 1CL 2DD 1CA_ 2fBB` or `2BB_ 4CV_ + 1AO 2DD 2fBB`
+         Debuff BACD: Have fewer than 4 historical ships AND 1 slow ship in STF
+    drp: |
+          ```[J/Boss] Aquila, I-26, Akashi, Hayasui, Arashi, Hagikaze, Hatsukaze, Maikaze (all E+)
+          [H] Okinami, Takanami, Taigei, Agano, Noshiro, Yahagi, Asashimo (all E+), Sakawa (M+)
+          [G] Asashimo (H+)```
+    rwd: |
+          ```[E] Window furniture, 1 medal, 1 T1 LBAA
+          [M] Window furniture, 1 medal, 1 QF gun mount, 1 skilled pilot, 1 T1 LBAA
+          [H] Window furniture, 1 medal, 1 QF gun mount, 1 skilled pilot, 1 Ginga LBAA```
+
+E-4:
+    map: http://imgur.com/bW5yDBb.png
+    rte: |
+         LBAS. Debuff mechanic: S rank D, F(?), H, I, and C, possibly in that order. You should hear a _ding!_ when returning from sortie and a different boss voice line. Debuff is permanent and does not reset on difficulty change. (Updated 8/17)
+
+         STF: `2BB 3CV(B) 1(CV or CA or AO) + 1CL 3DD 1CLT 1CA` goes 1B(DF/EH)IJKLMQ (32% ammo at boss)
+         CTF: `(4BB 2CVL) or (4BB 1 CV 1 AO) + 1CL 3DD 1CLT 1CA` goes 2ACFIJKLMQ (28% ammo at boss)
+         CTF: `3FBB 1CV 2CAV + 1CL 1FBB 2DD 2CA` goes 2AC(G/F)IJKLMQ (28% or less)
+         M/N routing rules by priority: 2CLT goes N, Kongou and Haruna in first fleet go M, Bismarck in escort goes N, SS anywhere or AO in escort goes N, else M
+    drp: |
+          ```[Boss/Q] Aquila, I-26, Maruyu, Akizuki, Libeccio, Umikaze, Asagumo, Kawakaze (all E+)
+          [I] Katsuragi, Amagi, Unryuu, Akizuki, Libeccio, Hayashimo, Kiyoshimo
+          [K] Amagi, Unryuu, Akizuki, Hayashimo, Kiyoshimo```
+    rwd: |
+          ```[E] Warspite, 1 medal
+          [M] Warspite, 2 medals, 8 screws, 1 Re.2005 Kai
+          [H] Warspite, 2 medals, 8 screws, 1 Re.2005 Kai, 1 Hard Medal```

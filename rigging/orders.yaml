@@ -85,13 +85,13 @@ twitch:
 # meta commands
 info:
     cl: [info]
-    do: This is the Summer 2016 beta test of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
+    do: This is the Summer 2016 Event beta test of `akizuki`, an open-source Kancolle helper bot for Discord developed primarily by Storian Logi.
     tr: 
     of: Gives basic information on `akizuki`.
 
 repo:
     cl: [repo, github, source]
-    do: https://github.com/StorianLogi/akizuki/
+    do: https://github.com/StorianLogi/akizuki/tree/su16beta
     tr: 
     of: Returns the Github repository for `akizuki`.
 
@@ -108,14 +108,28 @@ event:
     cl: [event, summer event, summer]
     do: |
         Event-specific commands for `akizuki` (map codes are formatted `E-#`):
-        ```+[map code], +routing [code], +drops [code], +shiplocks, +wikia [search term(s)], and more```
+        ```+[map code], +map [code], +routing [code], +drops [code], +rewards [code], +shiplocks, +wikia [search term(s)], +lbas, +tp and more```
         If you spot any new or updated event info not included in `akizuki`'s commands, please contact Storian Logi.
-        (Updated 8/11 10:30 PM PDT)
+        (Updated 8/17)
     tr: 
     of: Returns event-relevant information about `akizuki`.
 
 shiplocks:
     cl: [shiplocks, shiplock, locks, lock]
-    do: Not yet known. (Updated 8/11 10:30 PM PDT)
+    do: Individual locks for E-1 (single fleet), E-2 (single), and E-3 (combined). No lock for E-4 (combined).
     tr: 
-    of: Returns image link to event shiplocks chart.
+    of: Returns text description for event shiplocks.
+
+lbas:
+    cl: [lbas, lb]
+    do: The range of a land air base squadron is determined by the plane in each base that has the lowest range. There is a +3 node range bonus if a flying boat is present in the base. Bases are unlocked per event map cleared, up to 3 for E-4. Please check `+wikia lbas` for more information.
+    tr: 
+    of: Returns text info on land air bases.
+
+tp:
+    cl: [tp]
+    do: |
+        Sum and round down for TP/E-2 gauge depletion (Updated 8/17)
+        http://imgur.com/su4yTKE.png
+    tr: 
+    of: Returns table for TP gauge depletion.

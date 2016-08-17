@@ -5,3 +5,7 @@ make +maps not case sensitive
 make wikia/wikiwiki keys not case sensitive (using .upper())
 basically drop .lower() everywhere (+quest too?)
 remove json from requirements (it's built-in)
+extend default message staying time (to 5 min?)
+make maps.yaml and event.yaml coexist
+make event.yaml enable-able
+more routing keywords
