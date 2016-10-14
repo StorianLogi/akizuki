@@ -115,7 +115,7 @@ event:
         Event-specific commands for `akizuki` (map codes are formatted `E-#`):
         ```+[map code], +map [code], +routing [code], +drops [code], +rewards [code], +shiplocks, +wikia [search term(s)], +lbas, +tp and more```
         If you spot any new or updated event info not included in `akizuki`'s commands, please contact Storian Logi.
-        (Updated 8/17)
+        (Updated 8/18)
     tr: 
     of: Returns event-relevant information about `akizuki`.
 

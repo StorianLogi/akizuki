@@ -84,6 +84,7 @@ def update():
     commandList = []
     for k in commandMatrix.keys() :
         # if (k not in questMatrix.keys()) and (k not in mapMatrix.keys()):
+        if (k.upper() not in eventMatrix.keys()):
             if commandMatrix[k]['tr'] :
                 commandList.append(commandMatrix[k]['cl'][0]+' '+commandMatrix[k]['tr'])
             else :

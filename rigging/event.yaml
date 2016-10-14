@@ -49,11 +49,13 @@ E-2:
 E-3:
     map: http://imgur.com/kwB9R09.png
     rte: |
-         Use 7 of the following ships (3 in each fleet) to route BCGHJ: Kongou, Haruna, Suzuya, Kumano, Mogami, Mikuma, Choukai, Fubuki, Shirayuki, Hatsuyuki, Kinu, Yura. Debuff by S ranking nodes A, D, G and receiving 0 damage to your air bases at least once each. When completed, you will hear a _ding_ when returning to base. (Updated 8/17)
+         Installation boss; bring T3 shells, WGs, and tanks if you have them. Use 7 of the following ships (3 in each fleet) to route BCGHJ: Kongou, Haruna, Suzuya, Kumano, Mogami, Mikuma, Choukai, Fubuki, Shirayuki, Hatsuyuki, Kinu, Yura. Debuff by S ranking nodes A, D, G and receiving 0 damage to your air bases at least once each. When completed, you will hear a _ding_ when returning to base. (Updated 8/17)
          
          Historical STF: `(2CVL or 1CV) 1BB 2fBB 2CA(V) + 2CA(V) 1fBB 2DD 1CL`
          Non-historical CTF (routes BCDGHJ): `1CVL 3CV 2BB_ + 1CL 2DD 1CA_ 2fBB` with no Yamato-class in main fleet, no Bismarck in escort, max 1 AO. Alternatively, `1-2BB_ 3-4CV_ 1AO + 1CL 2DD 1CA_ 2fBB` or `2BB_ 4CV_ + 1AO 2DD 2fBB`
          Debuff BACD: Have fewer than 4 historical ships AND 1 slow ship in STF
+
+         LBAS setup: 2fighters 2bombers, 1fighter 3 bombers, all strikes to boss. Alternatively, 4 bombers in second base to strike dyson node 2x.
     drp: |
           ```[J/Boss] Aquila, I-26, Akashi, Hayasui, Arashi, Hagikaze, Hatsukaze, Maikaze (all E+)
           [H] Okinami, Takanami, Taigei, Agano, Noshiro, Yahagi, Asashimo (all E+), Sakawa (M+)
@@ -66,11 +68,12 @@ E-3:
 E-4:
     map: http://imgur.com/bW5yDBb.png
     rte: |
-         LBAS. Debuff mechanic: S rank D, F(?), H, I, and C, possibly in that order. You should hear a _ding!_ when returning from sortie and a different boss voice line. Debuff is permanent and does not reset on difficulty change. (Updated 8/17)
+         LBAS. Debuff mechanic: S rank 4/5 of the following nodes: C, D, H, I, and K. You should hear a _ding!_ when returning from sortie and a different boss voice line. Debuff is permanent, does not increase if you S rank all 5 nodes, and does not reset on difficulty change. (Updated 8/18)
 
          STF: `2BB 3CV(B) 1(CV or CA or AO) + 1CL 3DD 1CLT 1CA` goes 1B(DF/EH)IJKLMQ (32% ammo at boss)
          CTF: `(4BB 2CVL) or (4BB 1 CV 1 AO) + 1CL 3DD 1CLT 1CA` goes 2ACFIJKLMQ (28% ammo at boss)
          CTF: `3FBB 1CV 2CAV + 1CL 1FBB 2DD 2CA` goes 2AC(G/F)IJKLMQ (28% or less)
+         CTF: Kongou, Haruna, and at most 2CV (extra CVLs okay) allows free choice of remaining ships, so long as there are no SS, or slow ships in escort fleet. 3CLT recommended.
          M/N routing rules by priority: 2CLT goes N, Kongou and Haruna in first fleet go M, Bismarck in escort goes N, SS anywhere or AO in escort goes N, else M
     drp: |
           ```[Boss/Q] Aquila, I-26, Maruyu, Akizuki, Libeccio, Umikaze, Asagumo, Kawakaze (all E+)

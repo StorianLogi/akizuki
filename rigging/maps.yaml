@@ -1,34 +1,20 @@
 # Map info for akizuki
 
-# [map name in format X-#]:
+# [map name in format #-#]:
 #     map: [imgur/wikia link to map]
-#     rte: [info/routing information]
-#     drp: [list of notable/rare drops, separated by commas. if no notable drops, say "None notable."]
-
-# Consider adding AS values/descriptions
-# If so, remember to rewrite akizuki.py as well
+#     rte: |
+#          [info/routing information]
+#     drp: |
+#          [list of notable/rare drops, separated by commas, and line breaks per node. if no notable drops, say "None notable."]
+#     asv: [one line description of air superiority values necessary to reach notable nodes.]
 
 # NOTE!!! Due to the way the import is written, removing a map from maps.yaml and calling +update will NOT completely remove it from the commands list without a restart of `akizuki`. Be VERY CAREFUL when adding new maps (or at least map codes) to te list!
 # TODO: fix this
 
-# make sure E's are in CAPITALS
-
-E-1:
-    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
-    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
-    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
-
-E-2:
-    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
-    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
-    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
-
-E-3:
-    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
-    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
-    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
-
-E-4:
-    map: Map not yet known. (Updated 8/11 10:30 PM PDT)
-    rte: Not yet known. (Updated 8/11 10:30 PM PDT)
-    drp: Not yet known. (Updated 8/11 10:30 PM PDT)
+5-5:
+    map: imgur/wikia link to map
+    rte: |
+         info/routing information
+    drp: |
+         list of notable/rare drops, separated by commas, and line breaks per node. if no notable drops, say "None notable."
+    asv: one line description of air superiority values necessary to reach notable nodes.
